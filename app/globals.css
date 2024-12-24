@@ -1,0 +1,132 @@
+/* globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definição das Variáveis CSS */
+:root {
+  /* Variáveis CSS para Projeto B - Modo Claro */
+  --background: 0, 0%, 98%; /* hsl(0, 0%, 98%) */
+  --foreground: 200, 15%, 8%; /* hsl(200, 15%, 8%) */
+  --card: 0, 0%, 100%; /* hsl(0, 0%, 100%) */
+  --card-foreground: 200, 15%, 8%;
+  --popover: 0, 0%, 100%;
+  --popover-foreground: 200, 15%, 8%;
+  --primary: 0, 0%, 100%; /* hsl(0, 0%, 100%) */
+  --primary-foreground: 200, 15%, 8%;
+  --secondary: 0, 0%, 90%;
+  --secondary-foreground: 200, 15%, 8%;
+  --muted: 0, 0%, 95%;
+  --muted-foreground: 200, 15%, 8%;
+  --accent: 210, 100%, 56%;
+  --accent-foreground: 0, 0%, 100%;
+  --destructive: 0, 80%, 60%;
+  --destructive-foreground: 0, 0%, 100%;
+  --border: 0, 0%, 80%;
+  --input: 0, 0%, 95%;
+  --ring: 210, 100%, 56%;
+  --chart-1: 210, 100%, 56%;
+  --chart-2: 120, 100%, 50%;
+  --chart-3: 0, 100%, 50%;
+  --chart-4: 60, 100%, 50%;
+  --chart-5: 300, 100%, 50%;
+  --radius: 8px; /* Exemplo */
+
+  /* Variáveis CSS para Cores Fixas do Projeto A */
+  --primary-dark: #1f1f1f;
+  --highlight-dark: #ffffff;
+  --highlight-light: #1f1f1f;
+  --secondary-dark: #707070;
+  --secondary-light: #e6e6e6;
+  --action-color: #3b82f6; /* Renomeado para evitar conflito */
+}
+
+/* Variáveis CSS para Projeto B - Modo Escuro */
+.dark {
+  --background: 210, 20%, 10%; /* Exemplo: hsl(210, 20%, 10%) */
+  --foreground: 200, 15%, 95%; /* Exemplo: hsl(200, 15%, 95%) */
+  --card: 210, 20%, 15%; /* Exemplo: hsl(210, 20%, 15%) */
+  --card-foreground: 200, 15%, 95%;
+  --popover: 210, 20%, 15%;
+  --popover-foreground: 200, 15%, 95%;
+  --primary: 200, 15%, 95%; /* hsl(200, 15%, 95%) */
+  --primary-foreground: 200, 15%, 8%;
+  --secondary: 210, 20%, 20%;
+  --secondary-foreground: 200, 15%, 95%;
+  --muted: 210, 20%, 25%;
+  --muted-foreground: 200, 15%, 95%;
+  --accent: 210, 100%, 56%;
+  --accent-foreground: 0, 0%, 100%;
+  --destructive: 0, 80%, 60%;
+  --destructive-foreground: 0, 0%, 100%;
+  --border: 210, 20%, 20%;
+  --input: 210, 20%, 20%;
+  --ring: 210, 100%, 56%;
+  --chart-1: 210, 100%, 56%;
+  --chart-2: 120, 100%, 50%;
+  --chart-3: 0, 100%, 50%;
+  --chart-4: 60, 100%, 50%;
+  --chart-5: 300, 100%, 50%;
+  --radius: 8px; /* Exemplo */
+
+  /* Variáveis CSS para Cores Fixas do Projeto A no Modo Escuro */
+  --primary-dark: #1f1f1f;
+  --highlight-dark: #ffffff;
+  --highlight-light: #1f1f1f;
+  --secondary-dark: #707070;
+  --secondary-light: #e6e6e6;
+  --action-color: #3b82f6; /* Renomeado para evitar conflito */
+}
+
+/* Estilos Globais */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  /* Aplica estilos globais usando as classes Tailwind */
+  * {
+    @apply border-secondary-light;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Outros Estilos Específicos */
+.property-description h1 {
+  @apply text-5xl font-bold my-4;
+}
+
+.property-description h2 {
+  @apply text-4xl font-bold my-4;
+}
+
+.property-description h3 {
+  @apply text-3xl font-bold my-4;
+}
+
+.property-description h4 {
+  @apply text-2xl font-bold my-4;
+}
+
+.property-description h5 {
+  @apply text-xl font-bold my-4;
+}
+
+.property-description h6 {
+  @apply text-lg font-bold my-4;
+}
+
+.property-description p {
+  @apply my-4 font-normal text-base;
+}
+
+.property-description ul {
+  @apply list-disc my-4 ml-4;
+}
+
+.property-description ol {
+  @apply list-decimal my-4 ml-4;
+}
