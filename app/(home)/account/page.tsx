@@ -1,3 +1,5 @@
+// app/(home)/account/page.tsx
+
 import { auth } from "@/firebase/server";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { cookies } from "next/headers";

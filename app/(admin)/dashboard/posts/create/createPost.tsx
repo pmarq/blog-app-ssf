@@ -1,4 +1,5 @@
 // app/dashboard/posts/create/page.tsx
+
 "use client";
 
 import React, { useState } from "react";
@@ -6,7 +7,7 @@ import EditorComponent, { FinalPost } from "@/app/components/common/editor";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth"; // Import do contexto de autenticação
 import { useToast } from "@/hooks/use-toast"; // Import do hook de toast
-import { createPost, savePostImages } from "../action";
+import { createPost } from "../action"; // Import apenas da função createPost
 
 export default function CreatePost() {
   const [busy, setBusy] = useState(false);
@@ -26,63 +27,24 @@ export default function CreatePost() {
     setErrorMessage("");
 
     try {
-      // 1) Monta objeto base (sem imagens do editor, pois já foram enviadas imediatamente)
+      // 1) Monta objeto base incluindo a thumbnail
       const postData = {
         ...post,
         images: [], // Não vamos mandar nada do conteúdo
         tags: post.tagsArray || [],
         slug: post.slug || "", // Assegure-se de que o slug está presente
         meta: post.meta || "",
+        authorId: userId, // Passa o authorId para a ação server
+        thumbnail: post.thumbnail, // Inclui o File da thumbnail (já foi upload no Editor)
       };
 
-      // 2) Cria o post no Firestore e obtém ID (server action)
+      // 2) Cria o post no Firestore e gerencia o upload da thumbnail no servidor
       const response = await createPost(postData, userId);
       if (response.error || !response.postId) {
         throw new Error(response.message || "Falha ao criar o post.");
       }
-      const { postId } = response;
 
-      // 3) Se houver thumbnail (File), faz upload no CLIENTE usando Cloudinary
-      let urls: string[] = [];
-      if (post.thumbnail instanceof File) {
-        const file = post.thumbnail;
-
-        // Monta form data
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append(
-          "upload_preset",
-          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
-        );
-        // Define a pasta para thumbnails do post
-        formData.append("folder", `posts/${postId}`);
-
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-        const data = await res.json();
-        if (!data.secure_url) {
-          throw new Error("Falha ao fazer upload do thumbnail no Cloudinary.");
-        }
-        // Salva a URL final
-        urls.push(data.secure_url);
-      }
-
-      // 4) Se subimos o thumbnail, salva URL no Firestore
-      if (urls.length > 0) {
-        const saveResponse = await savePostImages({ postId, paths: urls });
-        if (saveResponse.error) {
-          throw new Error(
-            saveResponse.message || "Falha ao salvar imagens do post."
-          );
-        }
-      }
-
-      // 5) Sucesso
+      // 3) Sucesso
       toast({
         title: "Sucesso!",
         description: "Post criado com sucesso!",

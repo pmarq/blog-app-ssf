@@ -1,14 +1,12 @@
 // components/GalleryModal.tsx
-"use client";
-
-import Image from "next/image";
-import { ChangeEventHandler, FC, useCallback, useState } from "react";
-import { AiOutlineCloudUpload } from "react-icons/ai";
+import React, { useState, ChangeEventHandler, FC } from "react";
 import Gallery from "./Gallery";
 import ModalContainer, { ModalProps } from "../../ModalContainer";
 import ActionButton from "../../ActionButton";
+import { AiOutlineCloudUpload } from "react-icons/ai";
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import GalleryImage from "./GalleryImage";
 import { useAuth } from "@/context/auth";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload"; // Import da função utilitária
 
 export interface ImageSelectionResult {
   src: string;
@@ -18,27 +16,26 @@ export interface ImageSelectionResult {
 interface Props extends ModalProps {
   images: { src: string }[];
   uploading?: boolean;
-
   onFileSelect(imageUrl: string): void;
   onSelect(result: ImageSelectionResult): void;
 }
 
 const GalleryModal: FC<Props> = ({
   visible,
-  uploading,
+  uploading = false,
   images,
   onFileSelect,
   onSelect,
   onClose,
 }): JSX.Element => {
-  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [altText, setAltText] = useState("");
   const { currentUser } = useAuth();
   const userId = currentUser?.uid;
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     onClose && onClose();
-  }, [onClose]);
+  };
 
   const handleOnImageChange: ChangeEventHandler<HTMLInputElement> = async ({ target }) => {
     const { files } = target;
@@ -90,7 +87,7 @@ const GalleryModal: FC<Props> = ({
           <div className="basis-[75%] max-h-[450px] overflow-y-auto custom-scroll-bar">
             <Gallery
               images={images}
-              selectedImage={selectedImage}
+              selectedImage={selectedImage || ""}
               uploading={uploading}
               onSelect={(src) => setSelectedImage(src)}
             />
@@ -122,15 +119,15 @@ const GalleryModal: FC<Props> = ({
                     value={altText}
                     onChange={({ target }) => setAltText(target.value)}
                   />
-
                   <ActionButton onClick={handleSelection} title="Select" />
 
                   <div className="relative aspect-video bg-png-pattern">
-                    <Image
+                    <GalleryImage
                       src={selectedImage}
-                      fill
                       alt={altText || "Selected image preview"}
+                      fill
                       style={{ objectFit: "contain" }}
+                      className="object-contain"
                     />
                   </div>
                 </>
@@ -144,4 +141,3 @@ const GalleryModal: FC<Props> = ({
 };
 
 export default GalleryModal;
-

@@ -1,9 +1,13 @@
+// app/components/common/PostCard.tsx
+
 "use client";
+
 import Image from "next/image";
 import { FC } from "react";
 import dateformat from "dateformat";
 import Link from "next/link";
 import { PostDetail } from "@/app/utils/types";
+import { Loader2 } from "lucide-react"; // Certifique-se de instalar a biblioteca lucide-react ou use outro ícone
 
 interface Props {
   post: PostDetail;
@@ -24,30 +28,38 @@ const PostCard: FC<Props> = ({
   onDeleteClick,
 }): JSX.Element => {
   const { title, slug, meta, createdAt, tags, thumbnail } = post;
+  console.log("Thumbnail:", thumbnail); // Log para depuração
+
   return (
     <div className="rounded shadow-sm shadow-secondary-dark overflow-hidden bg-primary dark:bg-primary-dark transition flex flex-col h-full">
-      {/* thumbnail */}
+      {/* Thumbnail */}
       <div className="aspect-video relative">
-        {!thumbnail ? (
+        {!thumbnail || !thumbnail.url ? (
           <div className="w-full h-full flex items-center justify-center text-secondary-dark opacity-50 font-semibold">
             No image
           </div>
         ) : (
-          <Image src={thumbnail} layout="fill" alt="Thumbnail" />
+          <Image
+            src={thumbnail.url}
+            fill // Substitui layout="fill" pela propriedade 'fill' para compatibilidade com as últimas versões
+            alt={`Thumbnail for ${title}`}
+            className="object-cover" // Substitui objectFit="cover" pela classe Tailwind correspondente
+          />
         )}
       </div>
-      {/* Post Info */}
+
+      {/* Informações do Post */}
       <div className="p-2 flex-1 flex flex-col">
         <div className="flex justify-end">
           <span className="text-sm text-secondary-dark">
-            {dateformat(createdAt, "d-mmm-yyyy")}
+            {dateformat(new Date(createdAt), "d-mmm-yyyy")}
           </span>
         </div>
-        <Link href={"/" + slug}>
+        <Link href={"/" + slug} className="flex flex-col flex-1">
           <div className="flex items-center justify-between text-sm text-primary-dark dark:text-primary">
             <div className="flex flex-wrap items-center space-x-1">
               {tags.map((t, index) => (
-                <span key={t + index}>#{t}</span>
+                <span key={`${t}-${index}`}>#{t}</span>
               ))}
             </div>
           </div>
@@ -60,17 +72,20 @@ const PostCard: FC<Props> = ({
         {controls && (
           <div className="flex justify-end items-center h-8 mt-auto space-x-4 text-primary-dark dark:text-primary">
             {busy ? (
-              <span className="animate-pulse">Removing</span>
+              <div className="flex items-center space-x-2">
+                <Loader2 className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                <span>Removendo...</span>
+              </div>
             ) : (
               <>
                 <Link
                   className="hover:underline"
                   href={"/dashboard/posts/update/" + slug}
                 >
-                  Edit
+                  Editar
                 </Link>
                 <button onClick={onDeleteClick} className="hover:underline">
-                  Delete
+                  Deletar
                 </button>
               </>
             )}

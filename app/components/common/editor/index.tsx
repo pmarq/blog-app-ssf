@@ -1,4 +1,5 @@
 // components/Editor.tsx
+
 "use client";
 
 import { ChangeEventHandler, useEffect, useState } from "react";
@@ -15,20 +16,16 @@ import ToolBar from "./ToolBar";
 import SEOForm, { SeoResult } from "./SeoForm";
 import ThumbnailSelector from "./ThumbnailSelector";
 import ActionButton from "../ActionButton";
-import { useAuth } from "@/context/auth"; // Import do contexto de autenticação
-import { useToast } from "@/hooks/use-toast"; // Import do hook de toast
-import { useRouter } from "next/navigation"; // Import para redirecionamento
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload"; // Import da função utilitária
-
-// Tipos do Post e Thumbnail
+import { useAuth } from "@/context/auth";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { Thumbnail } from "@/app/models/Post";
 import { ThumbnailData } from "@/app/models/ThumbnailData";
 
-// Representa o post final
 export interface FinalPost extends SeoResult {
   title: string;
   content: string;
-  // Thumbnail pode ser File local ou URL (string), etc.
   thumbnail?: File | string | ThumbnailData | Thumbnail | null;
 }
 
@@ -36,7 +33,6 @@ interface Props {
   initialValue?: FinalPost;
   btnTitle?: string;
   busy?: boolean;
-  // Chama essa função ao concluir, enviando o post final
   onSubmit(post: FinalPost): Promise<void>;
 }
 
@@ -49,14 +45,8 @@ export default function Editor({
   const [selectionRange, setSelectionRange] = useState<Range>();
   const [showGallery, setShowGallery] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  // Lista de URLs (Cloudinary) que já foram enviadas e que aparecem na galeria
   const [images, setImages] = useState<Array<{ src: string }>>([]);
-
-  // SEO inicial
   const [seoInitialValue, setSeoInitialValue] = useState<SeoResult>();
-
-  // Estado do post em si
   const [post, setPost] = useState<FinalPost>({
     title: "",
     content: "",
@@ -65,13 +55,10 @@ export default function Editor({
     slug: "",
   });
 
-  // Hooks de autenticação e toast
   const { currentUser } = useAuth();
-  const userId = currentUser?.uid;
   const { toast } = useToast();
   const router = useRouter();
 
-  // Editor TipTap
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -106,26 +93,65 @@ export default function Editor({
     },
   });
 
-  // Carrega as imagens já hospedadas no Cloudinary
-  async function fetchImages() {
-    if (!userId) {
-      console.error("Usuário não autenticado.");
+  // Função para obter o token de autenticação
+  const getAuthToken = async (): Promise<string | null> => {
+    if (!currentUser) {
+      return null;
+    }
+    try {
+      const token = await currentUser.getIdToken();
+      return token;
+    } catch (error) {
+      console.error("Erro ao obter token de autenticação:", error);
+      return null;
+    }
+  };
+
+  // Função para buscar imagens da galeria
+  const fetchImages = async () => {
+    const token = await getAuthToken();
+    if (!token) {
+      toast({
+        title: "Erro!",
+        description: "Você precisa estar autenticado para acessar a galeria de imagens.",
+        variant: "destructive",
+      });
+      router.push("/login"); // Redireciona para a página de login
       return;
     }
 
     try {
-      // Aqui assumimos que você tem uma rota que lista imagens do Cloudinary para a galeria do usuário
-      // Ex.: /api/cloudinary/list-images?folder=gallery/<userId>
-      const res = await fetch(`/api/cloudinary/list-images?folder=gallery/${userId}`);
+      const res = await fetch(`/api/cloudinary/list-images?folder=gallery/${currentUser?.uid}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("RES===>", res);
+
+      if (!res.ok) {
+        throw new Error("Falha na requisição para listar imagens.");
+      }
       const { resources } = await res.json();
-      // "resources" deve ser um array de objetos com "secure_url"
+      console.log("Recursos recebidos da API no Frontend:", resources); // Adicione este log
+
       if (Array.isArray(resources)) {
-        setImages(resources.map((r: any) => ({ src: r.secure_url })));
+        setImages(resources.map((r: any) => ({ src: r.src }))); // Corrigido: use 'r.src' em vez de 'r.secure_url'
       }
     } catch (error) {
       console.error("Erro ao buscar imagens:", error);
+      toast({
+        title: "Erro!",
+        description: "Não foi possível buscar as imagens da galeria.",
+        variant: "destructive",
+      });
     }
-  }
+  };
+
+  // Função para abrir a galeria e buscar imagens
+  const handleOpenGallery = async () => {
+    await fetchImages();
+    setShowGallery(true);
+  };
 
   // (1) Chamado ao clicar em alguma imagem da galeria
   const handleImageSelection = (result: ImageSelectionResult) => {
@@ -144,13 +170,14 @@ export default function Editor({
   // Submit do post
   const handleSubmit = async () => {
     // 1) Verifica se o usuário está autenticado
-    const token = await currentUser?.getIdToken();
+    const token = await getAuthToken();
     if (!token) {
       toast({
         title: "Erro!",
         description: "Você precisa estar autenticado para criar um post.",
         variant: "destructive",
       });
+      router.push("/login"); // Redireciona para a página de login
       return;
     }
 
@@ -177,7 +204,7 @@ export default function Editor({
     const finalContent = editor.getHTML();
 
     // Faz upload do thumbnail usando uploads assinados
-    let finalThumbnail = post.thumbnail;
+    let finalThumbnail: string | Thumbnail | File | ThumbnailData | null | undefined = post.thumbnail;
     if (post.thumbnail instanceof File) {
       try {
         setUploading(true);
@@ -186,7 +213,13 @@ export default function Editor({
         const folder = `thumbnails/${Date.now()}`;
 
         // Faz o upload utilizando a função utilitária
-        finalThumbnail = await uploadToCloudinary(post.thumbnail, folder);
+        const uploadResponse = await uploadToCloudinary(post.thumbnail, folder);
+
+        // Mapeia UploadResponse para Thumbnail
+        finalThumbnail = {
+          url: uploadResponse.secure_url,
+          public_id: uploadResponse.public_id,
+        };
 
         console.log("Thumbnail enviado com sucesso:", finalThumbnail);
       } catch (error: any) {
@@ -213,13 +246,13 @@ export default function Editor({
     // 4) Chama a função onSubmit do pai
     try {
       await onSubmit(updatedPost);
-      toast({
+     /*  toast({
         title: "Sucesso!",
         description: "Post criado com sucesso.",
         variant: "default",
       });
       // 5) Redireciona para a página de posts (opcional)
-      router.push("/posts");
+      router.push("/dashboard/posts"); */
     } catch (error: any) {
       console.error("Erro ao criar post:", error);
       toast({
@@ -256,11 +289,6 @@ export default function Editor({
     }
   }, [editor, selectionRange]);
 
-  // Carrega imagens da galeria ao montar
-  useEffect(() => {
-    fetchImages();
-  }, [userId]); // Dependência de userId para refetch quando o usuário muda
-
   // Se vier initialValue (edição)
   useEffect(() => {
     if (!initialValue) return;
@@ -279,7 +307,6 @@ export default function Editor({
           {/* Cabeçalho: Thumbnail + Botão Submit */}
           <div className="flex items-center justify-between mb-3">
             <ThumbnailSelector
-              // Se thumbnail for string ou tiver .url, mostramos
               initialValue={(() => {
                 if (!post.thumbnail) return undefined;
                 if (typeof post.thumbnail === "string") return post.thumbnail;
@@ -312,7 +339,7 @@ export default function Editor({
           />
 
           {/* Barra de Ferramentas (ToolBar) */}
-          <ToolBar editor={editor} onOpenImageClick={() => setShowGallery(true)} />
+          <ToolBar editor={editor} onOpenImageClick={handleOpenGallery} />
 
           <div className="h-[1px] w-full bg-secondary-dark dark:bg-secondary-light my-3" />
         </div>
@@ -338,7 +365,6 @@ export default function Editor({
         visible={showGallery}
         onClose={() => setShowGallery(false)}
         onSelect={handleImageSelection}
-        // Aqui, a prop onFileSelect recebe a URL final
         onFileSelect={handleFileSelect}
         images={images}
         uploading={uploading}

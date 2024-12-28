@@ -1,8 +1,7 @@
 // app/api/posts/route.ts
 
-import { fetchInitialPosts, fetchMorePosts } from "@/lib/posts";
+import { fetchInitialPosts, fetchMorePosts } from "@/lib/fetchPosts"; // Importar ambas as funções
 import { NextRequest, NextResponse } from "next/server";
-
 
 /**
  * Handler para a rota GET /api/posts
@@ -10,10 +9,13 @@ import { NextRequest, NextResponse } from "next/server";
  * - limit: número de posts a retornar (padrão: 9)
  * - lastVisibleId: ID do último post recebido
  */
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const limit = parseInt(searchParams.get("limit") || "9", 10);
   const lastVisibleId = searchParams.get("lastVisibleId");
+
+  console.log("POSTS====>", lastVisibleId);
 
   try {
     let response;
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       posts: response.posts,
       lastVisibleId: response.lastVisibleId,
-      hasMore: response.posts.length === limit,
+      hasMore: response.hasMore,
     });
   } catch (error) {
     console.error("Erro ao buscar posts:", error);

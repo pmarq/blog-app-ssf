@@ -1,9 +1,16 @@
+export interface Thumbnail {
+  url: string;
+  public_id?: string;
+}
+
 export interface PostDetail {
+  id: string;
   title: string;
-  slug: string;
+  content: string;
   meta: string;
   tags: string[];
-  thumbnail?: string;
+  slug: string;
+  thumbnail: Thumbnail | null;
   createdAt: string;
 }
 
@@ -22,3 +29,4 @@ export interface UserProfile {
   avatar: string | undefined;
   role: "user" | "admin";
 }
+

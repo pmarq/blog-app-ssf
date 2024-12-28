@@ -1,22 +1,26 @@
 // app/(admin)/dashboard/posts/page.tsx
 
+
 import React from "react";
 import AdminLayout from "@/app/components/layout/AdminLayout";
 import PostsListWrapper from "@/app/components/common/PostListWrapper";
-import fetchInitialPosts from "@/lib/fetchPosts";
+import { fetchInitialPosts } from "@/lib/fetchPosts";
+
 
 export default async function Posts() {
   const limit = 9;
 
-  // Dados iniciais vindos do servidor
-  const { posts, lastVisibleId } = await fetchInitialPosts(limit);
-  console.log(posts)
+  // Busca os posts iniciais diretamente no servidor
+  const { posts, lastVisibleId, hasMore } = await fetchInitialPosts(limit);
+  console.log(posts);
 
   return (
     <AdminLayout>
       <PostsListWrapper
         initialPosts={posts}
         initialLastVisibleId={lastVisibleId}
+        hasMore={hasMore}
+        showControls={true}
       />
     </AdminLayout>
   );

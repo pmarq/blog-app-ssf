@@ -1,6 +1,10 @@
 // app/api/cloudinary/list-images/route.ts
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { auth } from "@/firebase/server";
+
+
+ // Ajuste o caminho conforme a sua estrutura de pastas
 
 // Configuração do Cloudinary
 cloudinary.config({
@@ -22,6 +26,42 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Obter o token de autenticação do cabeçalho Authorization
+    const authHeader = request.headers.get("Authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Autenticação necessária." },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+
+    // Verificar o token de autenticação
+    let decodedToken;
+    try {
+      decodedToken = await auth.verifyIdToken(idToken);
+    } catch (error) {
+      console.error("Erro ao verificar token:", error);
+      return NextResponse.json(
+        { error: "Token de autenticação inválido ou expirado." },
+        { status: 401 }
+      );
+    }
+
+    const uid = decodedToken.uid;
+
+    // Verificar se a pasta solicitada pertence ao usuário autenticado
+    const expectedFolder = `gallery/${uid}`;
+    if (folder !== expectedFolder) {
+      return NextResponse.json(
+        { error: "Acesso negado à pasta solicitada." },
+        { status: 403 }
+      );
+    }
+
+    // Interagir com o Cloudinary para listar as imagens
     const result = await cloudinary.api.resources({
       type: "upload",
       prefix: folder,
@@ -35,6 +75,8 @@ export async function GET(request: Request) {
       height: resource.height,
       format: resource.format,
     }));
+
+    console.log("Recursos retornados do Cloudinary:", resources); // Adicione este log
 
     return NextResponse.json({ resources }, { status: 200 });
   } catch (error) {

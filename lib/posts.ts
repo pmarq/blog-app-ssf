@@ -3,10 +3,11 @@ import { Post, PostResponse } from "@/app/models/Post";
 import { formatPost } from "@/app/models/Utils";
 import { PostDetail } from "@/app/utils/types";
 import { firestore } from "@/firebase/server";
+import { Timestamp } from "firebase-admin/firestore";
 
 export const getPostBySlug = async (
   slug: string
-): Promise<PostResponse | null> => {
+): Promise<PostDetail | null> => { // Alterado para PostDetail
   try {
     console.log(`Buscando post com slug: ${slug}`);
     const snapshot = await firestore
@@ -23,16 +24,17 @@ export const getPostBySlug = async (
     const doc = snapshot.docs[0];
     const postData = doc.data() as Post;
 
-    const { title, content, thumbnail, tags, meta } = postData;
+    const { title, content, thumbnail, tags, meta, createdAt } = postData; // Incluído createdAt
 
-    const result: PostResponse = {
+    const result: PostDetail = { // Alterado para PostDetail
       id: doc.id,
       title,
       content,
-      tags: Array.isArray(tags) ? tags.join(", ") : "",
+      tags: Array.isArray(tags) ? tags : [], // Mantenha tags como array
       thumbnail: thumbnail || null,
       slug,
       meta,
+      createdAt: (createdAt as Timestamp).toDate().toISOString(), // Convertendo Timestamp para string ISO
     };
 
     console.log("Post encontrado:", result);
@@ -45,8 +47,7 @@ export const getPostBySlug = async (
 
 ////////////
 /**
- * Formata os dados do post conforme necessário.
- */
+ * Formata os dados do post conforme necessário. */
 
 /**
  * Busca os posts iniciais com limite.
@@ -122,5 +123,25 @@ export const fetchMorePosts = async (
   } catch (error) {
     console.error("Error fetching more posts:", error);
     return { posts: [], lastVisibleId: undefined };
+  }
+};
+
+/**
+ * Busca todos os slugs dos posts no Firestore.
+ */
+export const getAllPostSlugs = async (): Promise<string[]> => {
+  try {
+    const snapshot = await firestore.collection('posts').get();
+    const slugs: string[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.slug) {
+        slugs.push(data.slug);
+      }
+    });
+    return slugs;
+  } catch (error) {
+    console.error('Erro ao buscar slugs dos posts:', error);
+    return [];
   }
 };

@@ -1,11 +1,21 @@
-//action.ts
+// app/dashboard/posts/action.ts
+
 "use server";
 
 import { v4 as uuidv4 } from "uuid";
 import { Timestamp, DocumentReference } from "firebase-admin/firestore";
 import { Post } from "@/app/models/Post";
 import { postValidationSchema, validateSchema } from "@/lib/validationSchema";
-import { firestore } from "@/firebase/server";
+import {  firestore } from "@/firebase/server";
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { v2 as cloudinary } from "cloudinary";
+
+// Configurar o Cloudinary no servidor
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Tipos das respostas
 interface CreatePostResponse {
@@ -25,17 +35,26 @@ interface SavePostImagesResponse {
   message?: string;
 }
 
+interface UpdatePostResponse {
+  success?: boolean;
+  error?: boolean;
+  message?: string;
+}
+
 /**
  * Cria um novo post no Firestore.
  * @param postData Dados do post.
  * @param authorId ID do autor do post.
  * @returns Resposta da operação.
  */
+
 export async function createPost(
   postData: any,
   authorId: string
 ): Promise<CreatePostResponse> {
   try {
+    console.log("Recebendo dados do post:", postData);
+
     // 1. Validação
     const errorMessage = validateSchema(postValidationSchema, postData);
     if (errorMessage) {
@@ -59,7 +78,29 @@ export async function createPost(
     // 4. Gerar ID do post
     const postId = uuidv4();
 
-    // 5. Montar objeto
+    // 5. Fazer upload da thumbnail para o Cloudinary e obter URL e public_id
+    let thumbnailUrl = "";
+    let thumbnailPublicId = "";
+
+    if (postData.thumbnail instanceof File) {
+      // Upload da thumbnail enviada como File
+      const uploadResponse = await uploadToCloudinary(postData.thumbnail, `posts/${postId}`);
+      thumbnailUrl = uploadResponse.secure_url;
+      thumbnailPublicId = uploadResponse.public_id;
+      console.log("Thumbnail URL após upload:", thumbnailUrl);
+    } else if (
+      postData.thumbnail &&
+      typeof postData.thumbnail === "object" &&
+      "url" in postData.thumbnail &&
+      "public_id" in postData.thumbnail
+    ) {
+      // Thumbnail já enviado como objeto com url e public_id
+      thumbnailUrl = postData.thumbnail.url;
+      thumbnailPublicId = postData.thumbnail.public_id;
+      console.log("Thumbnail recebido como objeto:", thumbnailUrl, thumbnailPublicId);
+    }
+
+    // 6. Montar objeto
     const newPost: Post = {
       id: postId,
       title: postData.title,
@@ -67,14 +108,21 @@ export async function createPost(
       meta: postData.meta,
       content: postData.content,
       tags: postData.tags || [],
-      thumbnail: null, // Será atualizado posteriormente
+      thumbnail: thumbnailUrl
+        ? { url: thumbnailUrl, public_id: thumbnailPublicId }
+        : null,
+      images: [],
       author: firestore.collection("users").doc(authorId) as DocumentReference,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
 
-    // 6. Salvar no Firestore
+    console.log("POST====>>>>", newPost);
+
+    // 7. Salvar no Firestore
     await firestore.collection("posts").doc(postId).set(newPost);
+
+    console.log("Post criado com sucesso:", postId);
 
     return { postId };
   } catch (error) {
@@ -91,7 +139,9 @@ export async function createPost(
  * @param data Parâmetros contendo o ID do post e as URLs das imagens.
  * @returns Resposta da operação.
  */
-export async function savePostImages(data: SavePostImagesParams): Promise<SavePostImagesResponse> {
+export async function savePostImages(
+  data: SavePostImagesParams
+): Promise<SavePostImagesResponse> {
   try {
     const { postId, paths } = data;
     if (!paths || paths.length === 0) {
@@ -103,14 +153,18 @@ export async function savePostImages(data: SavePostImagesParams): Promise<SavePo
     const otherPaths = paths.slice(1);
 
     // 2) Montar objeto para update
-    const updateData: any = {
+    const updateData: Partial<Post> = {
       updatedAt: Timestamp.now(),
     };
 
     // Monta "thumbnail" se existir
     if (thumbnailPath) {
+      // Obter o `public_id` a partir da URL
+      const publicId = thumbnailPath.split('/').pop()?.split('.')[0] || '';
+
       updateData.thumbnail = {
         url: thumbnailPath, // URL do Cloudinary
+        public_id: publicId, // `public_id` extraído
       };
     }
 
@@ -132,6 +186,106 @@ export async function savePostImages(data: SavePostImagesParams): Promise<SavePo
     return {
       error: true,
       message: (error as Error).message || "Falha ao salvar imagens do post",
+    };
+  }
+}
+
+/**
+ * Atualiza um post existente no Firestore.
+ * @param slug Slug do post a ser atualizado.
+ * @param postData Dados atualizados do post, incluindo possivelmente uma nova thumbnail.
+ * @returns Resposta da operação.
+ */
+export async function updatePost(
+  slug: string,
+  postData: any
+): Promise<UpdatePostResponse> {
+  try {
+    // 1. Validação
+    const errorMessage = validateSchema(postValidationSchema, postData);
+    if (errorMessage) {
+      return { error: true, message: errorMessage };
+    }
+
+    // 2. Autenticação do usuário
+    const authorId = postData.authorId; // Supondo que o authorId seja passado no postData
+    if (!authorId) {
+      return { error: true, message: "Usuário não autenticado." };
+    }
+
+    // 3. Buscar o post pelo slug
+    const postsRef = firestore.collection("posts");
+    const querySnapshot = await postsRef.where("slug", "==", slug).get();
+
+    if (querySnapshot.empty) {
+      return { error: true, message: "Post não encontrado." };
+    }
+
+    const postDoc = querySnapshot.docs[0];
+    const postId = postDoc.id;
+    const existingPost = postDoc.data() as Post;
+
+    // 4. Checar se o novo slug (se alterado) é único
+    if (postData.slug !== existingPost.slug) {
+      const slugSnapshot = await postsRef.where("slug", "==", postData.slug).get();
+      if (!slugSnapshot.empty) {
+        return { error: true, message: "Slug já está em uso. Por favor, escolha outro." };
+      }
+    }
+
+    // 5. Converter tags
+    if (typeof postData.tags === "string") {
+      postData.tags = postData.tags.split(",").map((t: string) => t.trim());
+    }
+
+    // 6. Gerenciar thumbnail
+    let updateData: Partial<Post> = {
+      title: postData.title,
+      slug: postData.slug,
+      meta: postData.meta,
+      content: postData.content,
+      tags: postData.tags || [],
+      updatedAt: Timestamp.now(),
+    };
+
+    if (postData.thumbnail) {
+      // Se a thumbnail for um objeto File (nova imagem)
+      if (postData.thumbnail instanceof File) {
+        // 6.1 Deletar a thumbnail antiga do Cloudinary, se existir
+        if (existingPost.thumbnail && existingPost.thumbnail.public_id) {
+          try {
+            await cloudinary.uploader.destroy(existingPost.thumbnail.public_id);
+          } catch (err) {
+            console.error("Erro ao deletar thumbnail antiga:", err);
+            throw new Error("Falha ao deletar thumbnail antiga.");
+          }
+        }
+
+        // 6.2 Fazer upload da nova thumbnail usando o helper
+        const uploadResponse = await uploadToCloudinary(postData.thumbnail, `posts/${postId}`);
+        updateData.thumbnail = {
+          url: uploadResponse.secure_url,
+          public_id: uploadResponse.public_id,
+        };
+      }
+      // Se a thumbnail for apenas uma URL (sem alteração)
+      else if (typeof postData.thumbnail === "object" && "url" in postData.thumbnail) {
+        updateData.thumbnail = {
+          url: postData.thumbnail.url,
+          public_id: postData.thumbnail.public_id || existingPost.thumbnail?.public_id || '',
+        };
+      }
+    }
+
+    // 7. Atualizar no Firestore
+    await postsRef.doc(postId).update(updateData);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao atualizar post:", error);
+    return {
+      error: true,
+      message: (error as Error).message || "Falha ao atualizar o post",
     };
   }
 }

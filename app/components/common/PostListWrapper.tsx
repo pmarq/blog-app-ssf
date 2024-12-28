@@ -1,14 +1,20 @@
-// app/(admin)/posts/PostsListWrapper.tsx
+// app/components/common/PostsListWrapper.tsx
 
 "use client";
 
 import React, { useState } from "react";
 import PostsList from "./PostList";
 import { PostDetail } from "@/app/utils/types";
+import { useAuth } from "@/context/auth";
+import { useToast } from "@/hooks/use-toast"; // Import do hook de toast
+import ConfirmDeleteModal from "./ConfirmDeleteModal";
+ // Importe o componente de modal de confirmação
 
 interface PostsListWrapperProps {
   initialPosts: PostDetail[];
   initialLastVisibleId?: string;
+  hasMore: boolean;
+  showControls?: boolean
 }
 
 // Função para construir URLs absolutas
@@ -31,22 +37,34 @@ const buildUrl = (path: string) => {
 const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
   initialPosts,
   initialLastVisibleId,
+  hasMore,
+  showControls = false, // Valor padrão para a prop
 }) => {
   // Estado para armazenar os posts
   const [posts, setPosts] = useState<PostDetail[]>(initialPosts);
-  const [hasMorePosts, setHasMorePosts] = useState<boolean>(true);
+  const [hasMorePosts, setHasMorePosts] = useState<boolean>(hasMore);
   const [lastVisibleId, setLastVisibleId] = useState<string | undefined>(
     initialLastVisibleId
   );
+
+  // Estados para gerenciar a deleção
+  const [modalOpen, setModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<PostDetail | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState<boolean>(false);
+
+  const { currentUser } = useAuth();
+  const { toast } = useToast(); // Obtém a função toast do hook useToast
 
   console.log("Posts iniciais:", initialPosts); // Loga os posts iniciais
   console.log("ID visível inicial:", initialLastVisibleId); // Loga o ID inicial
 
   // Função para carregar mais posts
   const loadMorePosts = async () => {
+    if (!hasMorePosts || !lastVisibleId) return;
+
     try {
       // Constrói a URL absoluta para buscar mais posts
-      const url = buildUrl(`/api/posts?limit=9&lastVisibleId=${lastVisibleId || ""}`);
+      const url = buildUrl(`/api/posts?limit=9&lastVisibleId=${lastVisibleId}`);
       console.log("Buscando posts na URL:", url);
 
       // Faz a requisição para a API
@@ -66,19 +84,103 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
       setPosts((prev) => [...prev, ...data.posts]);
       setHasMorePosts(data.hasMore);
       setLastVisibleId(data.lastVisibleId);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao carregar posts:", error);
       setHasMorePosts(false); // Indica que não há mais posts para carregar
+      toast({
+        title: "Erro ao Carregar Posts",
+        description: "Não foi possível carregar mais posts.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para abrir o modal de confirmação de deleção
+  const openDeleteModal = (post: PostDetail) => {
+    setPostToDelete(post);
+    setModalOpen(true);
+  };
+
+  // Função para fechar o modal de confirmação de deleção
+  const closeDeleteModal = () => {
+    setPostToDelete(null);
+    setModalOpen(false);
+  };
+
+  // Função para confirmar a deleção do post
+  const handleDeleteConfirm = async () => {
+    if (!postToDelete) return;
+
+    setDeleteBusy(true);
+
+    try {
+      // Obter o token de autenticação
+      const token = await currentUser?.getIdToken();
+      if (!token) {
+        toast({
+          title: "Usuário Não Autenticado",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const res = await fetch(`/api/posts/${postToDelete.slug}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Falha ao deletar o post.");
+      }
+
+      const result = await res.json();
+      toast({
+        title: "Post Deletado",
+        description: result.message || "Post deletado com sucesso.",
+        variant: "default",
+      });
+
+      // Remover o post da lista local
+      setPosts((prev) => prev.filter((post) => post.slug !== postToDelete.slug));
+    } catch (error: any) {
+      console.error("Erro ao deletar o post:", error);
+      toast({
+        title: "Erro ao Deletar",
+        description: error.message || "Falha ao deletar o post.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteBusy(false);
+      closeDeleteModal();
     }
   };
 
   return (
-    <PostsList
-      posts={posts}
-      loadMorePosts={loadMorePosts}
-      hasMorePosts={hasMorePosts}
-    />
+    <>
+      <PostsList
+        posts={posts}
+        loadMorePosts={loadMorePosts}
+        hasMorePosts={hasMorePosts}
+        onDeleteClick={openDeleteModal} // Passa a função de deleção para o PostsList
+        showControls={showControls} // Passa a prop para controlar a exibição dos botões
+      />
+
+      {/* Modal de Confirmação de Deleção */}
+      <ConfirmDeleteModal
+        isOpen={modalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeleteConfirm}
+        postTitle={postToDelete ? postToDelete.title : ""}
+        busy={deleteBusy}
+      />
+    </>
   );
 };
 
 export default PostsListWrapper;
+

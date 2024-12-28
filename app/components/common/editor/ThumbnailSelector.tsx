@@ -1,3 +1,6 @@
+// components/ThumbnailSelector.tsx
+"use client";
+
 import { Thumbnail } from "@/app/models/Post";
 import classNames from "classnames";
 import { ChangeEventHandler, FC, useEffect, useState } from "react";
@@ -11,20 +14,35 @@ const commonClass =
   "border border-dashed border-secondary-dark flex items-center justify-center rounded cursor-pointer aspect-video";
 
 const ThumbnailSelector: FC<Props> = ({ initialValue, onChange }): JSX.Element => {
-  const [selectedThumbnail, setSelectedThumbnail] = useState("");
+  const [selectedThumbnail, setSelectedThumbnail] = useState<string | undefined>(undefined);
+  const [objectURL, setObjectURL] = useState<string | undefined>(undefined);
 
-  // Mudança: Validação de tipo de arquivo
   const handleChange: ChangeEventHandler<HTMLInputElement> = ({ target }) => {
     const { files } = target;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
     const file = files[0];
-    if (!file.type.startsWith("image/")) {
-      alert("Por favor, selecione um arquivo de imagem válido.");
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    const maxSize = 1 * 1024 * 1024; // 1MB
+
+    if (!validTypes.includes(file.type)) {
+      alert("Por favor, selecione uma imagem válida (JPG, PNG ou GIF).");
       return;
     }
 
-    setSelectedThumbnail(URL.createObjectURL(file));
+    if (file.size > maxSize) {
+      alert("A imagem selecionada é muito grande. O tamanho máximo permitido é de 5MB.");
+      return;
+    }
+
+    // Limpar a URL anterior, se existir
+    if (objectURL) {
+      URL.revokeObjectURL(objectURL);
+    }
+
+    const newObjectURL = URL.createObjectURL(file);
+    setSelectedThumbnail(newObjectURL);
+    setObjectURL(newObjectURL);
     onChange(file);
   };
 
@@ -34,6 +52,12 @@ const ThumbnailSelector: FC<Props> = ({ initialValue, onChange }): JSX.Element =
     } else if (initialValue && "url" in initialValue) {
       setSelectedThumbnail(initialValue.url);
     }
+    // Limpeza ao desmontar o componente
+    return () => {
+      if (objectURL) {
+        URL.revokeObjectURL(objectURL);
+      }
+    };
   }, [initialValue]);
 
   return (
@@ -41,7 +65,7 @@ const ThumbnailSelector: FC<Props> = ({ initialValue, onChange }): JSX.Element =
       <input
         type="file"
         hidden
-        accept="image/jpg, image/png, image/jpeg"
+        accept="image/jpg, image/png, image/jpeg, image/gif"
         id="thumbnail"
         onChange={handleChange}
       />

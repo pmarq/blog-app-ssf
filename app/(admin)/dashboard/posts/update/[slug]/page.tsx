@@ -1,16 +1,20 @@
 // app/(admin)/dashboard/posts/update/[slug]/page.tsx
+
 import AdminLayout from "@/app/components/layout/AdminLayout";
 import EditorWrapper from "./EditorWrapper";
 import { getPostBySlug } from "@/lib/posts";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 const UpdatePage = async ({ params }: PageProps) => {
-  const { slug } = params;
+  // Await the params to resolve the promise
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
+
   const post = await getPostBySlug(slug);
 
   if (!post) {
@@ -31,3 +35,4 @@ const UpdatePage = async ({ params }: PageProps) => {
 };
 
 export default UpdatePage;
+

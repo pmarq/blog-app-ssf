@@ -28,7 +28,7 @@ export default function RootLayout({
         <AuthProvider>
           <UserNav /> {/* Usa o componente de navegação */}
           {children}
-          <Toaster />
+          <Toaster/>
         </AuthProvider>
       </body>
     </html>

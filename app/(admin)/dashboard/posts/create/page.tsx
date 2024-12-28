@@ -1,4 +1,4 @@
-// app/admin/posts/create/page.tsx
+// app/(admin)/posts/create/page.tsx
 
 import { Metadata } from "next";
 import CreatePost from "./createPost";

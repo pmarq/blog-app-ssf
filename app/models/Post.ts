@@ -1,8 +1,20 @@
+// app/models/Posts.ts
+
 import { Timestamp, DocumentReference } from "firebase-admin/firestore";
 
+// Interface Thumbnail com public_id opcional
 export interface Thumbnail {
   url: string;
-  public_id?: string; // Tornado opcional
+  public_id: string; // Tornado opcional
+}
+
+export function isThumbnail(obj: any): obj is Thumbnail {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    typeof obj.url === 'string' &&
+    typeof obj.public_id === 'string'
+  );
 }
 
 export interface Post {
@@ -12,9 +24,7 @@ export interface Post {
   meta: string;
   content: string;
   tags: string[];
-  thumbnail: {
-    url: string;
-  } | null;
+  thumbnail: Thumbnail | null; // Atualizado para usar a interface Thumbnail
   images?: Array<{
     path: string;
     url: string;
@@ -29,7 +39,7 @@ export interface PostResponse {
   title: string;
   content: string;
   tags: string;
-  thumbnail: Thumbnail | null;
+  thumbnail: Thumbnail | null; // Atualizado para usar a interface Thumbnail
   slug: string;
   meta: string;
 }
