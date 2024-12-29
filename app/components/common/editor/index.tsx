@@ -60,7 +60,7 @@ export default function Editor({
   const router = useRouter();
 
   const editor = useEditor({
-    extensions: [
+    extensions: [      
       StarterKit,
       Underline,
       Link.configure({
@@ -91,6 +91,7 @@ export default function Editor({
     onUpdate: ({ editor }) => {
       // Exemplo: se quiser capturar o conteúdo a cada digitação
     },
+    immediatelyRender: false, // Essencial para evitar problemas de SSR
   });
 
   // Função para obter o token de autenticação

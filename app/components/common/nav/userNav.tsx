@@ -10,7 +10,7 @@ export default function Navbar() {
         className="text-3xl tracking-widest flex gap-2 items-center uppercase"
       >
         <HomeIcon />
-        <span>Fire Homes</span>
+        <span>BLOG-INLEVOR</span>
       </Link>
       <ul className="flex gap-6 items-center">
         <li>

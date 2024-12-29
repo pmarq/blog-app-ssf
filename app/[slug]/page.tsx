@@ -8,6 +8,7 @@ import SafeContent from '../components/common/SafeContent';
 import { getAllPostSlugs, getPostBySlug } from '@/lib/posts';
 import { PostDetail } from '../utils/types';
 import DefaultLayout from '../components/layout/DefaultLayout';
+import Comments from '../components/common/comments/Comments';
 
 
 interface PageProps {
@@ -102,6 +103,10 @@ const SinglePostPage = async ({ params }: PageProps) => {
         </div>
 
         <SafeContent content={content} />
+        {/* Aqui entram os comentários */}
+        <div className="mt-10">
+          <Comments belongsTo={slug} />
+        </div>
       </div>
     </DefaultLayout>
   );

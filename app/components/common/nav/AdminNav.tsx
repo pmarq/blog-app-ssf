@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-/* import Logo from "./Logo"; */
 import {
   LayoutDashboard,
   Box,
@@ -26,7 +25,6 @@ const NAV_VISIBILITY = "nav-visibility";
 
 export default function AdminNav() {
   const navRef = useRef<HTMLElement>(null);
-
   const [visible, setVisible] = useState(false);
 
   const navItems: NavItem[] = [
@@ -37,11 +35,10 @@ export default function AdminNav() {
     { href: "/dashboard/contact", icon: Contact, label: "Contact" },
   ];
 
+  // Função que gerencia a expansão/recolhimento do menu
   const toggleNav = (visibility: boolean) => {
-    const currentNav = navRef.current;
-    if (!currentNav) return;
-
-    const { classList } = currentNav;
+    if (!navRef.current) return;
+    const { classList } = navRef.current;
     if (visibility) {
       classList.remove(NAV_OPEN_WIDTH);
       classList.add(NAV_CLOSE_WIDTH);
@@ -51,6 +48,7 @@ export default function AdminNav() {
     }
   };
 
+  // Inverte o estado do menu e salva no localStorage
   const updateNavState = () => {
     toggleNav(visible);
     const newState = !visible;
@@ -58,6 +56,7 @@ export default function AdminNav() {
     localStorage.setItem(NAV_VISIBILITY, JSON.stringify(newState));
   };
 
+  // Ao montar o componente, recupera o estado anterior do menu
   useEffect(() => {
     const navState = localStorage.getItem(NAV_VISIBILITY);
     if (navState !== null) {
@@ -65,7 +64,7 @@ export default function AdminNav() {
       setVisible(newState);
       toggleNav(!newState);
     } else {
-      setVisible(true);
+      setVisible(true); // por padrão, expandido
     }
   }, []);
 
@@ -77,8 +76,12 @@ export default function AdminNav() {
       flex flex-col justify-between transition-width overflow-hidden sticky top-0"
     >
       <div>
-        <Link href="/admin" className="flex items-center space-x-2 p-3 mb-10">
-          {/* <Logo className="fill-highlight-light dark:fill-highlight-dark w-5 h-5" /> */}
+        {/* Link principal (Admin) */}
+        <Link
+          href="/admin"
+          title={!visible ? "Admin" : ""} // tooltip nativo quando recolhido
+          className="flex items-center space-x-2 p-3 mb-10"
+        >
           {visible && (
             <span className="text-highlight-light dark:text-highlight-dark text-xl font-semibold leading-none">
               Admin
@@ -91,6 +94,8 @@ export default function AdminNav() {
             <Link
               key={item.href}
               href={item.href}
+              // Se o menu está recolhido (!visible), exibimos um tooltip nativo no 'title'
+              title={!visible ? item.label : ""}
               className="flex items-center 
               text-highlight-light dark:text-highlight-dark text-ml
               p-3 hover:scale-[0.98] transition"

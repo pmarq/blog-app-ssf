@@ -1,11 +1,11 @@
-// Import the functions you need from the SDKs you need
+// firebase/client.ts
+
 import { initializeApp, getApps } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
 import { FirebaseStorage, getStorage } from "firebase/storage";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { Firestore, getFirestore } from "firebase/firestore";
 
-// Your web app's Firebase configuration
+// Seu arquivo de configuração do Firebase
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -15,26 +15,31 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Adicione os logs para verificar a configuração
+// Logs para depuração
 console.log("Firebase Config:", firebaseConfig);
 console.log("Apps (antes de inicializar):", getApps());
 
-// Initialize Firebase
+// Verifica se já existe uma instância do app
 const currentApps = getApps();
+
 let auth: Auth;
 let storage: FirebaseStorage;
+let db: Firestore;
 
 if (!currentApps.length) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   storage = getStorage(app);
+  db = getFirestore(app);
 } else {
   const app = currentApps[0];
   auth = getAuth(app);
   storage = getStorage(app);
+  db = getFirestore(app);
 }
 
-// Logs após inicialização
+// Logs finais
 console.log("Apps (depois de inicializar):", getApps());
 
-export { auth, storage };
+// Exporta tudo o que você precisar usar no client
+export { auth, storage, db };

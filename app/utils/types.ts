@@ -30,3 +30,23 @@ export interface UserProfile {
   role: "user" | "admin";
 }
 
+// app/utils/types.ts
+
+export interface Owner {
+  id: string;
+  name: string;
+  avatar: string;
+}
+
+export interface CommentResponse {
+  id: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+  likedByOwner: boolean; // Indica se o usuário atual já curtiu
+  chiefComment: boolean;
+  repliedTo: string | null;
+  owner: Owner;
+  replies: CommentResponse[];
+  likedBy?: string[]; // Array de IDs de usuários que curtiram
+}

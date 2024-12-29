@@ -34,7 +34,7 @@ if (!currentApps.length) {
   auth = getAuth(app);
 }
 
-export { firestore, auth };
+export { firestore, auth, admin };
 
 export const getTotalPages = async (
   firestoreQuery: FirebaseFirestore.Query<
