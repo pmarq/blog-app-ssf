@@ -38,7 +38,7 @@ const Comments: FC<Props> = ({ belongsTo }) => {
   const fetchComments = async (postId: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/comments?postId=${postId}`);
+      const res = await fetch(`/api/comments?postId=${encodeURIComponent(postId)}`);
       if (!res.ok) {
         console.error("Erro na resposta da API:", await res.text());
         return;

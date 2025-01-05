@@ -3,7 +3,7 @@
 import { FC, ReactNode, useState } from "react";
 import dateFormat from "dateformat";
 import parse from "html-react-parser";
-import { ReplyAll, Trash2, Edit } from "lucide-react"; // Ícones do Lucide
+import { ReplyAll, Trash2, Edit } from "lucide-react"; // Icons from Lucide
 import CommentForm from "./CommentForm";
 import LikeHeart from "../LikeHeart";
 import ProfileIcon from "../ProfileIcon";
@@ -26,7 +26,7 @@ const CommentCard: FC<Props> = ({
   onDeleteClick,
   onLikeClick,
 }): JSX.Element => {
-  const { owner, createdAt, content, likedByOwner, likes } = comment;
+  const { owner, createdAt, content, /* likedByOwner, */ likes } = comment;
   const { name, avatar } = owner;
   const [showForm, setShowForm] = useState(false);
   const [initialState, setInitialState] = useState("");
@@ -51,13 +51,22 @@ const CommentCard: FC<Props> = ({
 
   const handleCommentSubmit = (commentContent: string) => {
     if (initialState) {
-      // Atualização do comentário
+      // Update the comment
       onUpdateSubmit && onUpdateSubmit(commentContent);
     } else {
-      // Resposta ao comentário
+      // Reply to the comment
       onReplySubmit && onReplySubmit(commentContent);
     }
     hideReplyForm();
+  };
+
+  // Function to safely format the date
+  const formatDate = (dateString: string | Date): string => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return "Invalid date";
+    }
+    return dateFormat(date, "d-mmm-yyyy");
   };
 
   return (
@@ -70,7 +79,7 @@ const CommentCard: FC<Props> = ({
             {name}
           </h1>
           <span className="text-sm text-secondary-dark">
-            {dateFormat(createdAt, "d-mmm-yyyy")}
+            {formatDate(createdAt)}
           </span>
         </div>
         <div className="mt-1 text-primary-dark dark:text-primary">
@@ -79,7 +88,7 @@ const CommentCard: FC<Props> = ({
 
         <div className="flex space-x-4 mt-2">
           <LikeHeart
-            liked={likedByOwner}
+            /* liked={likedByOwner} */
             label={`${likes} ${likes === 1 ? "like" : "likes"}`}
             onClick={onLikeClick}
           />
@@ -128,7 +137,7 @@ const Button: FC<ButtonProps> = ({ children, onClick }) => {
     <button
       onClick={onClick}
       className="flex items-center text-primary-dark dark:text-primary space-x-2 hover:underline"
-      aria-label="Ação do botão"
+      aria-label="Button action"
     >
       {children}
     </button>

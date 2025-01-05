@@ -43,10 +43,36 @@ export interface CommentResponse {
   content: string;
   createdAt: string;
   likes: number;
-  likedByOwner: boolean; // Indica se o usuário atual já curtiu
+  likedByOwner: boolean; 
   chiefComment: boolean;
   repliedTo: string | null;
   owner: Owner;
-  replies: CommentResponse[];
   likedBy?: string[]; // Array de IDs de usuários que curtiram
+  replies: CommentResponse[];
+}
+
+// Interface para um comentário principal com suas respostas
+export interface LatestComment {
+  id: string;
+  owner: Owner;
+  postId:string
+  content: string;
+  belongsTo: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+  createdAt: string;
+  likes: number;
+  likedBy: string[];
+  replies: CommentResponse[]; // Repostas estruturadas
+}
+
+
+export interface LatestUserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  // Adicione outros campos conforme necessário
 }

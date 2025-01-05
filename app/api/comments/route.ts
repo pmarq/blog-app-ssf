@@ -2,143 +2,166 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, firestore, admin } from '@/firebase/server';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
+
 /**
  * GET /api/comments?postId=XYZ
  * Lista todos os comentários principais (chiefComment) do post, incluindo replies.
- * (Acesso público, sem checagem de token, igual ao seu GET de posts.)
+ * (Acesso público)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Lê postId da query string
-    const { searchParams } = new URL(request.url);
-    const postId = searchParams.get('postId');
-    if (!postId) {
-      return NextResponse.json({ error: 'Missing postId' }, { status: 400 });
-    }
+      // Lê postId da query string
+      const { searchParams } = new URL(request.url);
+      const postId = searchParams.get('postId');
+      if (!postId) {
+          return NextResponse.json({ error: 'Missing postId' }, { status: 400 });
+      }
 
-    // Buscar chiefComments no Firestore
-    const chiefSnap = await firestore
-      .collection('comments')
-      .where('postId', '==', postId)
-      .where('chiefComment', '==', true)
-      .orderBy('createdAt', 'desc')
-      .get();
+      // Buscar o post pelo slug para obter o ID do documento Firestore
+      const postSnap = await firestore
+          .collection('posts')
+          .where('slug', '==', postId) // Aqui, postId é o slug
+          .limit(1)
+          .get();
 
-    const comments: any[] = [];
+      if (postSnap.empty) {
+          return NextResponse.json(
+              { error: 'Post not found' },
+              { status: 404 }
+          );
+      }
 
-    for (const docSnap of chiefSnap.docs) {
-      const data = docSnap.data();
-      const docId = docSnap.id;
+      const postDoc = postSnap.docs[0];
+      const resolvedPostId = postDoc.id;
 
-      // Buscar replies (where repliedTo = docId)
-      const repliesSnap = await firestore
-        .collection('comments')
-        .where('repliedTo', '==', docId)
-        .orderBy('createdAt', 'asc')
-        .get();
+      // Buscar chiefComments no Firestore usando o resolvedPostId
+      const chiefSnap = await firestore
+          .collection('comments')
+          .where('postId', '==', resolvedPostId)
+          .where('chiefComment', '==', true)
+          .orderBy('createdAt', 'desc')
+          .limit(10) // Ajuste o limite conforme necessário
+          .get();
 
-      const replies: any[] = [];
-      repliesSnap.forEach((r: QueryDocumentSnapshot) => {
-        replies.push({
-          id: r.id,
-          ...r.data(),
-        });
-      });
+      const comments: any[] = [];
 
-      comments.push({
-        id: docId,
-        ...data,
-        replies,
-      });
-    }
+      for (const docSnap of chiefSnap.docs) {
+          const data = docSnap.data();
+          const docId = docSnap.id;
 
-    return NextResponse.json({ comments }, { status: 200 });
+          // Buscar replies (where repliedTo = docId)
+          const repliesSnap = await firestore
+              .collection('comments')
+              .where('repliedTo', '==', docId)
+              .orderBy('createdAt', 'asc')
+              .get();
+
+          const replies: any[] = [];
+          repliesSnap.forEach((r: QueryDocumentSnapshot) => {
+              replies.push({
+                  id: r.id,
+                  ...r.data(),
+              });
+          });
+
+          comments.push({
+              id: docId,
+              ...data,
+              replies,
+          });
+      }
+
+      return NextResponse.json({ comments }, { status: 200 });
   } catch (error) {
-    console.error('GET /api/comments ->', error);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+      console.error('GET /api/comments ->', error);
+      return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
 
 /**
  * POST /api/comments
- * Cria um novo comentário em um post (chiefComment ou reply).
- * Exemplo de body JSON:
- * {
- *   "content": "Olá, este é meu comentário",
- *   "postId": "abc123",
- *   "owner": { "id": "UID_DO_USER", "name": "Fulano", "avatar": "" },
- *   "repliedTo": null,
- *   "chiefComment": true
- * }
- * Exige token Bearer no header:
- *    Authorization: Bearer <token>
- */
-/**
- * POST /api/comments
- * Cria um novo comentário em um post (chiefComment ou reply).
+ * Cria um novo comentário
  */
 export async function POST(request: NextRequest) {
     try {
-      // 1) Extrai token do header
-      const authHeader = request.headers.get('Authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      const token = authHeader.split('Bearer ')[1];
-  
-      // 2) Verifica token com Firebase Admin
-      const decoded = await auth.verifyIdToken(token);
-      if (!decoded) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-  
-      // 3) Lê o body
-      const body = await request.json();
-      const { content, postId, owner, repliedTo, chiefComment } = body;
-  
-      if (!content || !postId || !owner) {
+        // 1) Extrai token do header
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const token = authHeader.split('Bearer ')[1];
+
+        // 2) Verifica token com Firebase Admin
+        const decoded = await auth.verifyIdToken(token);
+        if (!decoded) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // 3) Lê o body
+        const body = await request.json();
+        const { content, postId, owner, repliedTo, chiefComment } = body;
+
+        if (!content || !postId || !owner) {
+            return NextResponse.json(
+                { error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
+        // 4) Garante que o dono do comentário == usuário logado
+        if (owner.id !== decoded.uid) {
+            return NextResponse.json(
+                { error: 'User ID mismatch' },
+                { status: 403 }
+            );
+        }
+
+        // 5) Buscar o post pelo slug para obter o ID do documento Firestore
+        const postSnap = await firestore
+            .collection('posts')
+            .where('slug', '==', postId) // Aqui, postId é o slug
+            .limit(1)
+            .get();
+
+        if (postSnap.empty) {
+            return NextResponse.json(
+                { error: 'Post not found' },
+                { status: 404 }
+            );
+        }
+
+        const postDoc = postSnap.docs[0];
+        const resolvedPostId = postDoc.id;
+
+        // 6) Monta o objeto do comentário com Timestamp e campos de "Like"
+        const newComment = {
+            content,
+            postId: resolvedPostId, // Armazena o ID do documento Firestore
+            owner, // {id, name, avatar}
+            repliedTo: repliedTo || null,
+            chiefComment: !!chiefComment,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(), // Usando Timestamp
+            likes: 0, // Inicializa likes
+            likedBy: [], // Inicializa likedBy
+        };
+
+        // 7) Salva no Firestore
+        const docRef = await firestore.collection('comments').add(newComment);
+
+        // 8) Recupera o documento salvo para obter o timestamp
+        const savedDoc = await docRef.get();
+        const savedData = savedDoc.data();
+
         return NextResponse.json(
-          { error: 'Missing required fields' },
-          { status: 400 }
+            { commentId: docRef.id, ...savedData },
+            { status: 201 }
         );
-      }
-  
-      // 4) Garante que o dono do comentário == usuário logado
-      if (owner.id !== decoded.uid) {
-        return NextResponse.json(
-          { error: 'User ID mismatch' },
-          { status: 403 }
-        );
-      }
-  
-      // 5) Monta o objeto do comentário com Timestamp e campos de "Like"
-      const newComment = {
-        content,
-        postId,
-        owner, // {id, name, avatar}
-        repliedTo: repliedTo || null,
-        chiefComment: !!chiefComment,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(), // Usando Timestamp
-        likes: 0, // Inicializa likes
-        likedBy: [], // Inicializa likedBy
-      };
-  
-      // 6) Salva no Firestore
-      const docRef = await firestore.collection('comments').add(newComment);
-  
-      // 7) Recupera o documento salvo para obter o timestamp
-      const savedDoc = await docRef.get();
-      const savedData = savedDoc.data();
-  
-      return NextResponse.json(
-        { commentId: docRef.id, ...savedData },
-        { status: 201 }
-      );
     } catch (error) {
-      console.error('POST /api/comments ->', error);
-      return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+        console.error('POST /api/comments ->', error);
+        return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
-  }
+}
+
 
 /**
  * PATCH /api/comments?commentId=ABC

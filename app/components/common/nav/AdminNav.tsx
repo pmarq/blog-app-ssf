@@ -28,7 +28,7 @@ export default function AdminNav() {
   const [visible, setVisible] = useState(false);
 
   const navItems: NavItem[] = [
-    { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/dashboard/posts", icon: Box, label: "Posts" },
     { href: "/dashboard/users", icon: Users, label: "Users" },
     { href: "/dashboard/comments", icon: Mail, label: "Comments" },
@@ -78,7 +78,7 @@ export default function AdminNav() {
       <div>
         {/* Link principal (Admin) */}
         <Link
-          href="/admin"
+          href="/dashboard"
           title={!visible ? "Admin" : ""} // tooltip nativo quando recolhido
           className="flex items-center space-x-2 p-3 mb-10"
         >
