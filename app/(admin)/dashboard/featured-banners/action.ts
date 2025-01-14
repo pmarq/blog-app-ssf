@@ -3,13 +3,15 @@
 "use server";
 
 import { v4 as uuidv4 } from "uuid";
-import { Timestamp, DocumentReference } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 import { firestore } from "@/firebase/server"; // Importação correta do Firestore
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload"; // Função de upload existente
 import { v2 as cloudinary } from "cloudinary";
-import { newFeaturedBannerValidationSchema, oldFeaturedBannerValidationSchema } from "@/lib/featuredBanner";
-import { validateSchema } from "@/lib/validationSchema";
+import {
+  FeaturedBannerServerSchema,
+  FeaturedBannerServer,
+} from "@/lib/featuredBannerServer";
+import { validateSchema } from "@/lib/validationSchema"; // Certifique-se de que esta função existe e está correta
 import { Banner } from "@/app/models/Banners";
 
 // Tipos das respostas
@@ -19,60 +21,50 @@ interface CreateBannerResponse {
   message?: string;
 }
 
+interface UpdateBannerResponse {
+  success?: boolean;
+  error?: boolean;
+  message?: string;
+}
+
+interface DeleteBannerResponse {
+  success?: boolean;
+  error?: boolean;
+  message?: string;
+}
+
 /**
  * Cria um novo banner no Firestore.
- * @param bannerData Dados do banner.
+ * @param bannerData Dados do banner, incluindo imageUrl e publicId.
  * @returns Resposta da operação.
  */
 export async function createFeaturedBanner(
-  bannerData: any
+  bannerData: FeaturedBannerServer
 ): Promise<CreateBannerResponse> {
   try {
     console.log("Recebendo dados do banner:", bannerData);
 
-    // 1. Validação
-    const errorMessage = validateSchema(newFeaturedBannerValidationSchema, bannerData);
-    if (errorMessage) {
-      return { error: true, message: errorMessage };
+    // 1. Validação usando o esquema do servidor
+    const validation = FeaturedBannerServerSchema.safeParse(bannerData);
+    if (!validation.success) {
+      return {
+        error: true,
+        message: validation.error.errors.map((err) => err.message).join(", "),
+      };
     }
 
-    // 2. Checar se já existe um banner com o mesmo título ou link, se necessário
-    // Opcional: Implementar se há necessidade de campos únicos
-
-    // 3. Gerar ID do banner
+    // 2. Gerar ID do banner
     const bannerId = uuidv4();
 
-    // 4. Fazer upload da imagem para o Cloudinary e obter URL e public_id
-    let bannerUrl = "";
-    let bannerPublicId = "";
-
-    if (bannerData.file instanceof File) {
-      // Upload da imagem enviada como File
-      const uploadResponse = await uploadToCloudinary(bannerData.file, `banners/${bannerId}`);
-      bannerUrl = uploadResponse.secure_url;
-      bannerPublicId = uploadResponse.public_id;
-      console.log("Banner URL após upload:", bannerUrl);
-    } else if (
-      bannerData.file &&
-      typeof bannerData.file === "object" &&
-      "url" in bannerData.file &&
-      "public_id" in bannerData.file
-    ) {
-      // Banner já enviado como objeto com url e public_id
-      bannerUrl = bannerData.file.url;
-      bannerPublicId = bannerData.file.public_id;
-      console.log("Banner recebido como objeto:", bannerUrl, bannerPublicId);
-    }
-
-    // 5. Montar objeto
+    // 3. Montar objeto
     const newBanner: Banner = {
       id: bannerId,
       title: bannerData.title,
       link: bannerData.link,
       linkTitle: bannerData.linkTitle,
       banner: {
-        url: bannerUrl,
-        public_id: bannerPublicId,
+        url: bannerData.imageUrl,
+        public_id: bannerData.publicId,
       },
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -80,7 +72,7 @@ export async function createFeaturedBanner(
 
     console.log("Banner criado:", newBanner);
 
-    // 6. Salvar no Firestore
+    // 4. Salvar no Firestore
     await firestore.collection("featuredBanners").doc(bannerId).set(newBanner);
 
     console.log("Banner criado com sucesso:", bannerId);
@@ -95,82 +87,154 @@ export async function createFeaturedBanner(
   }
 }
 
+/**
+ * Obtém todos os banners em destaque do Firestore.
+ * @returns Lista de banners.
+ */
+export async function getFeaturedBanners(): Promise<Banner[]> {
+  const snapshot = await firestore.collection("featuredBanners").get();
+  const banners: Banner[] = [];
+  snapshot.forEach((doc) => {
+    banners.push(doc.data() as Banner);
+  });
+  return banners;
+}
 
-// TUPDATE BANNER 
+/**
+ * Obtém um banner específico pelo ID.
+ * @param bannerId ID do banner.
+ * @returns Banner ou null se não encontrado.
+ */
+export async function getFeaturedBannerById(
+  bannerId: string
+): Promise<Banner | null> {
+  const doc = await firestore.collection("featuredBanners").doc(bannerId).get();
+  if (!doc.exists) return null;
+  return doc.data() as Banner;
+}
 
-interface UpdateBannerResponse {
-    success?: boolean;
-    error?: boolean;
-    message?: string;
-  }
-  
-  /**
-   * Atualiza um banner existente no Firestore.
-   * @param bannerId ID do banner a ser atualizado.
-   * @param bannerData Dados atualizados do banner, incluindo possivelmente uma nova imagem.
-   * @returns Resposta da operação.
-   */
-  export async function updateFeaturedBanner(
-    bannerId: string,
-    bannerData: any
-  ): Promise<UpdateBannerResponse> {
-    try {
-      console.log("Recebendo dados para atualizar o banner:", bannerData);
-  
-      // 1. Validação
-      const errorMessage = validateSchema(oldFeaturedBannerValidationSchema, bannerData);
-      if (errorMessage) {
-        return { error: true, message: errorMessage };
-      }
-  
-      // 2. Buscar o banner pelo ID
-      const bannerRef = firestore.collection("featuredBanners").doc(bannerId);
-      const bannerDoc = await bannerRef.get();
-  
-      if (!bannerDoc.exists) {
-        return { error: true, message: "Banner não encontrado." };
-      }
-  
-      const existingBanner = bannerDoc.data() as Banner;
-  
-      // 3. Gerenciar imagem
-      let updateData: Partial<Banner> = {
-        title: bannerData.title,
-        link: bannerData.link,
-        linkTitle: bannerData.linkTitle,
-        updatedAt: Timestamp.now(),
-      };
-  
-      if (bannerData.file) {
-        // 3.1 Deletar a imagem antiga do Cloudinary, se existir
-        if (existingBanner.banner && existingBanner.banner.public_id) {
-          try {
-            await cloudinary.uploader.destroy(existingBanner.banner.public_id);
-          } catch (err) {
-            console.error("Erro ao deletar imagem antiga:", err);
-            throw new Error("Falha ao deletar imagem antiga.");
-          }
-        }
-  
-        // 3.2 Fazer upload da nova imagem
-        const uploadResponse = await uploadToCloudinary(bannerData.file, `banners/${bannerId}`);
-        updateData.banner = {
-          url: uploadResponse.secure_url,
-          public_id: uploadResponse.public_id,
-        };
-      }
-  
-      // 4. Atualizar no Firestore
-      await bannerRef.update(updateData);
-  
-      console.log("Banner atualizado com sucesso:", bannerId);
-  
-      return { success: true };
-    } catch (error) {
-      console.error("Erro ao atualizar banner:", error);
+/**
+ * Atualiza um banner existente no Firestore.
+ * @param bannerId ID do banner a ser atualizado.
+ * @param bannerData Dados atualizados do banner, incluindo possivelmente uma nova imagem.
+ * @returns Resposta da operação.
+ */
+export async function updateFeaturedBanner(
+  bannerId: string,
+  bannerData: FeaturedBannerServer
+): Promise<UpdateBannerResponse> {
+  try {
+    console.log("Recebendo dados para atualizar o banner:", bannerData);
+
+    // 1. Validação usando o esquema do servidor
+    const validation = FeaturedBannerServerSchema.safeParse(bannerData);
+    if (!validation.success) {
       return {
         error: true,
-        message: (error as Error).message || "Falha ao atualizar o banner",
+        message: validation.error.errors.map((err) => err.message).join(", "),
       };
     }
+
+    // 2. Buscar o banner pelo ID
+    const bannerRef = firestore.collection("featuredBanners").doc(bannerId);
+    const bannerDoc = await bannerRef.get();
+
+    if (!bannerDoc.exists) {
+      return { error: true, message: "Banner não encontrado." };
+    }
+
+    const existingBanner = bannerDoc.data() as Banner;
+
+    // 3. Gerenciar imagem
+    let updateData: Partial<Banner> = {
+      title: bannerData.title,
+      link: bannerData.link,
+      linkTitle: bannerData.linkTitle,
+      updatedAt: Timestamp.now(),
+    };
+
+    if (bannerData.imageUrl && bannerData.publicId) {
+      // 3.1 Deletar a imagem antiga do Cloudinary, se existir
+      if (existingBanner.banner && existingBanner.banner.public_id) {
+        try {
+          await cloudinary.uploader.destroy(existingBanner.banner.public_id);
+          console.log(
+            "Imagem antiga deletada do Cloudinary:",
+            existingBanner.banner.public_id
+          );
+        } catch (err) {
+          console.error("Erro ao deletar imagem antiga:", err);
+          throw new Error("Falha ao deletar imagem antiga.");
+        }
+      }
+
+      // 3.2 Adicionar a nova imagem
+      updateData.banner = {
+        url: bannerData.imageUrl,
+        public_id: bannerData.publicId,
+      };
+    }
+
+    // 4. Atualizar no Firestore
+    await bannerRef.update(updateData);
+
+    console.log("Banner atualizado com sucesso:", bannerId);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao atualizar banner:", error);
+    return {
+      error: true,
+      message: (error as Error).message || "Falha ao atualizar o banner",
+    };
   }
+}
+
+/**
+ * Deleta um banner existente no Firestore e remove a imagem do Cloudinary, se aplicável.
+ * @param bannerId ID do banner a ser deletado.
+ * @returns Resposta da operação.
+ */
+export async function deleteFeaturedBanner(
+  bannerId: string
+): Promise<DeleteBannerResponse> {
+  try {
+    console.log("Iniciando deleção do banner com ID:", bannerId);
+
+    // 1. Buscar o banner pelo ID
+    const bannerRef = firestore.collection("featuredBanners").doc(bannerId);
+    const bannerDoc = await bannerRef.get();
+
+    if (!bannerDoc.exists) {
+      return { error: true, message: "Banner não encontrado." };
+    }
+
+    const existingBanner = bannerDoc.data() as Banner;
+
+    // 2. Remover a imagem do Cloudinary, se existir
+    if (existingBanner.banner && existingBanner.banner.public_id) {
+      try {
+        await cloudinary.uploader.destroy(existingBanner.banner.public_id);
+        console.log(
+          "Imagem do banner deletada do Cloudinary:",
+          existingBanner.banner.public_id
+        );
+      } catch (err) {
+        console.error("Erro ao deletar imagem do Cloudinary:", err);
+        return { error: true, message: "Falha ao deletar imagem do banner." };
+      }
+    }
+
+    // 3. Deletar o documento do Firestore
+    await bannerRef.delete();
+    console.log("Banner deletado com sucesso:", bannerId);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao deletar banner:", error);
+    return {
+      error: true,
+      message: (error as Error).message || "Falha ao deletar o banner.",
+    };
+  }
+}
