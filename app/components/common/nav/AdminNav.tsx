@@ -7,7 +7,7 @@ import {
   Box,
   Users,
   Mail,
-  Contact,
+  Image,
   ChevronsLeft,
   ChevronsRight,
   LucideProps,
@@ -30,9 +30,9 @@ export default function AdminNav() {
   const navItems: NavItem[] = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/dashboard/posts", icon: Box, label: "Posts" },
+     { href: "/dashboard/featured-banners", icon: Image, label: "Featured Banners" },
     { href: "/dashboard/users", icon: Users, label: "Users" },
-    { href: "/dashboard/comments", icon: Mail, label: "Comments" },
-    { href: "/dashboard/contact", icon: Contact, label: "Contact" },
+    { href: "/dashboard/comments", icon: Mail, label: "Comments" },  
   ];
 
   // Função que gerencia a expansão/recolhimento do menu
