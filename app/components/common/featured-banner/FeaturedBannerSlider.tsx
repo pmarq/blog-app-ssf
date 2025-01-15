@@ -36,12 +36,13 @@ interface Props {
 const settings: Settings = {
   dots: true,
   lazyLoad: "anticipated",
-  infinite: false,
+  infinite: true,
   speed: 500,
   slidesToShow: 1,
   slidesToScroll: 1,
   arrows: true,
   autoplay: true,
+  autoplaySpeed: 3000, // Opcional: tempo entre as transições
 };
 
 export default function FeaturedProductsSlider({ banners }: Props) {
@@ -51,12 +52,12 @@ export default function FeaturedProductsSlider({ banners }: Props) {
   if (!banners.length) return null;
 
   return (
-    <div className="h-[380px]">
+    <div className="h-[350px]">
       <Slider {...settings}>
         {banners.map(({ banner, title, link, linkTitle }, index) => (
           <div className="select-none relative" key={index}>
             {/* Container da imagem */}
-            <div className="w-full h-[380px] relative">
+            <div className="w-full h-[320px] relative">
               <Image
                 fill
                 src={banner.url} // <-- Use banner.url, que é de fato uma string

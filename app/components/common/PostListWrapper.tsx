@@ -8,13 +8,13 @@ import { PostDetail } from "@/app/utils/types";
 import { useAuth } from "@/context/auth";
 import { useToast } from "@/hooks/use-toast"; // Import do hook de toast
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
- // Importe o componente de modal de confirmação
+// Importe o componente de modal de confirmação
 
 interface PostsListWrapperProps {
   initialPosts: PostDetail[];
   initialLastVisibleId?: string;
   hasMore: boolean;
-  showControls?: boolean
+  showControls?: boolean;
 }
 
 // Função para construir URLs absolutas
@@ -64,7 +64,9 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
 
     try {
       // Constrói a URL absoluta para buscar mais posts
-      const url = buildUrl(`/api/posts?limit=9&lastVisibleId=${lastVisibleId}`);
+      const url = buildUrl(
+        `/api/posts?limit=16&lastVisibleId=${lastVisibleId}`
+      );
       console.log("Buscando posts na URL:", url);
 
       // Faz a requisição para a API
@@ -129,7 +131,7 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -146,7 +148,9 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
       });
 
       // Remover o post da lista local
-      setPosts((prev) => prev.filter((post) => post.slug !== postToDelete.slug));
+      setPosts((prev) =>
+        prev.filter((post) => post.slug !== postToDelete.slug)
+      );
     } catch (error: any) {
       console.error("Erro ao deletar o post:", error);
       toast({
@@ -183,4 +187,3 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
 };
 
 export default PostsListWrapper;
-

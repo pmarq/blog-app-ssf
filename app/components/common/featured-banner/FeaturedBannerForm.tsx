@@ -182,7 +182,7 @@ const FeaturedBannerForm: React.FC<Props> = ({
 
       setPreview("");
       router.refresh();
-      router.push("/dashboard/banners");
+      router.push("/dashboard/featured-banners");
 
       if (onSubmit) {
         await onSubmit();

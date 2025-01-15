@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Timestamp, DocumentReference } from "firebase-admin/firestore";
 import { Post } from "@/app/models/Post";
 import { postValidationSchema, validateSchema } from "@/lib/validationSchema";
-import {  firestore } from "@/firebase/server";
+import { firestore } from "@/firebase/server";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -67,7 +67,10 @@ export async function createPost(
       .where("slug", "==", postData.slug)
       .get();
     if (!existing.empty) {
-      return { error: true, message: "Slug já está em uso. Por favor, escolha outro." };
+      return {
+        error: true,
+        message: "Slug já está em uso. Por favor, escolha outro.",
+      };
     }
 
     // 3. Converter tags
@@ -82,13 +85,7 @@ export async function createPost(
     let thumbnailUrl = "";
     let thumbnailPublicId = "";
 
-    if (postData.thumbnail instanceof File) {
-      // Upload da thumbnail enviada como File
-      const uploadResponse = await uploadToCloudinary(postData.thumbnail, `posts/${postId}`);
-      thumbnailUrl = uploadResponse.secure_url;
-      thumbnailPublicId = uploadResponse.public_id;
-      console.log("Thumbnail URL após upload:", thumbnailUrl);
-    } else if (
+    if (
       postData.thumbnail &&
       typeof postData.thumbnail === "object" &&
       "url" in postData.thumbnail &&
@@ -97,7 +94,11 @@ export async function createPost(
       // Thumbnail já enviado como objeto com url e public_id
       thumbnailUrl = postData.thumbnail.url;
       thumbnailPublicId = postData.thumbnail.public_id;
-      console.log("Thumbnail recebido como objeto:", thumbnailUrl, thumbnailPublicId);
+      console.log(
+        "Thumbnail recebido como objeto:",
+        thumbnailUrl,
+        thumbnailPublicId
+      );
     }
 
     // 6. Montar objeto
@@ -160,7 +161,7 @@ export async function savePostImages(
     // Monta "thumbnail" se existir
     if (thumbnailPath) {
       // Obter o `public_id` a partir da URL
-      const publicId = thumbnailPath.split('/').pop()?.split('.')[0] || '';
+      const publicId = thumbnailPath.split("/").pop()?.split(".")[0] || "";
 
       updateData.thumbnail = {
         url: thumbnailPath, // URL do Cloudinary
@@ -227,9 +228,14 @@ export async function updatePost(
 
     // 4. Checar se o novo slug (se alterado) é único
     if (postData.slug !== existingPost.slug) {
-      const slugSnapshot = await postsRef.where("slug", "==", postData.slug).get();
+      const slugSnapshot = await postsRef
+        .where("slug", "==", postData.slug)
+        .get();
       if (!slugSnapshot.empty) {
-        return { error: true, message: "Slug já está em uso. Por favor, escolha outro." };
+        return {
+          error: true,
+          message: "Slug já está em uso. Por favor, escolha outro.",
+        };
       }
     }
 
@@ -262,17 +268,26 @@ export async function updatePost(
         }
 
         // 6.2 Fazer upload da nova thumbnail usando o helper
-        const uploadResponse = await uploadToCloudinary(postData.thumbnail, `posts/${postId}`);
+        const uploadResponse = await uploadToCloudinary(
+          postData.thumbnail,
+          `posts/${postId}`
+        );
         updateData.thumbnail = {
           url: uploadResponse.secure_url,
           public_id: uploadResponse.public_id,
         };
       }
       // Se a thumbnail for apenas uma URL (sem alteração)
-      else if (typeof postData.thumbnail === "object" && "url" in postData.thumbnail) {
+      else if (
+        typeof postData.thumbnail === "object" &&
+        "url" in postData.thumbnail
+      ) {
         updateData.thumbnail = {
           url: postData.thumbnail.url,
-          public_id: postData.thumbnail.public_id || existingPost.thumbnail?.public_id || '',
+          public_id:
+            postData.thumbnail.public_id ||
+            existingPost.thumbnail?.public_id ||
+            "",
         };
       }
     }

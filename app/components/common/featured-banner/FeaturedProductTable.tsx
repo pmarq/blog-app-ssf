@@ -122,7 +122,7 @@ const FeaturedBannerTable: React.FC<Props> = ({ banners }) => {
                   <div className="flex items-center space-x-4">
                     <Link
                       className="font-semibold uppercase text-xs text-blue-400 hover:underline flex items-center gap-1"
-                      href={`/dashboard/banners/update?id=${id}`} // Ajuste a rota conforme necessário
+                      href={`/dashboard/featured-banners/update?id=${id}`} // Ajuste a rota conforme necessário
                     >
                       <Edit2 size={14} />
                       Editar
@@ -151,6 +151,12 @@ const FeaturedBannerTable: React.FC<Props> = ({ banners }) => {
           })}
         </TableBody>
       </Table>
+      <Link
+        href="/dashboard/featured-banners/add"
+        className="mt-2 inline-block bg-blue-500 text-white px-2 py-1 rounded"
+      >
+        Criar Novo Banner
+      </Link>
     </div>
   );
 };

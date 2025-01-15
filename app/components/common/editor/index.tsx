@@ -60,7 +60,7 @@ export default function Editor({
   const router = useRouter();
 
   const editor = useEditor({
-    extensions: [      
+    extensions: [
       StarterKit,
       Underline,
       Link.configure({
@@ -79,7 +79,10 @@ export default function Editor({
     editorProps: {
       handleClick(view, pos, event) {
         const { state } = view;
-        const range = getMarkRange(state.doc.resolve(pos), state.schema.marks.link);
+        const range = getMarkRange(
+          state.doc.resolve(pos),
+          state.schema.marks.link
+        );
         if (range) setSelectionRange(range);
       },
       attributes: {
@@ -114,7 +117,8 @@ export default function Editor({
     if (!token) {
       toast({
         title: "Erro!",
-        description: "Você precisa estar autenticado para acessar a galeria de imagens.",
+        description:
+          "Você precisa estar autenticado para acessar a galeria de imagens.",
         variant: "destructive",
       });
       router.push("/login"); // Redireciona para a página de login
@@ -122,11 +126,14 @@ export default function Editor({
     }
 
     try {
-      const res = await fetch(`/api/cloudinary/list-images?folder=gallery/${currentUser?.uid}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `/api/cloudinary/list-images?folder=gallery/${currentUser?.uid}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       console.log("RES===>", res);
 
       if (!res.ok) {
@@ -157,7 +164,11 @@ export default function Editor({
   // (1) Chamado ao clicar em alguma imagem da galeria
   const handleImageSelection = (result: ImageSelectionResult) => {
     if (!editor) return;
-    editor.chain().focus().setImage({ src: result.src, alt: result.altText }).run();
+    editor
+      .chain()
+      .focus()
+      .setImage({ src: result.src, alt: result.altText })
+      .run();
   };
 
   // (2) Chamado quando o modal faz upload e retorna a URL final
@@ -165,7 +176,11 @@ export default function Editor({
     // Adiciona à galeria
     setImages((prev) => [{ src: imageUrl }, ...prev]);
     // Insere no editor
-    editor?.chain().focus().setImage({ src: imageUrl, alt: "Uploaded Image" }).run();
+    editor
+      ?.chain()
+      .focus()
+      .setImage({ src: imageUrl, alt: "Uploaded Image" })
+      .run();
   };
 
   // Submit do post
@@ -205,7 +220,13 @@ export default function Editor({
     const finalContent = editor.getHTML();
 
     // Faz upload do thumbnail usando uploads assinados
-    let finalThumbnail: string | Thumbnail | File | ThumbnailData | null | undefined = post.thumbnail;
+    let finalThumbnail:
+      | string
+      | Thumbnail
+      | File
+      | ThumbnailData
+      | null
+      | undefined = post.thumbnail;
     if (post.thumbnail instanceof File) {
       try {
         setUploading(true);
@@ -247,7 +268,7 @@ export default function Editor({
     // 4) Chama a função onSubmit do pai
     try {
       await onSubmit(updatedPost);
-     /*  toast({
+      /*  toast({
         title: "Sucesso!",
         description: "Post criado com sucesso.",
         variant: "default",

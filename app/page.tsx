@@ -22,7 +22,7 @@ async function fetchFeaturedBanners() {
 }
 
 export default async function HomePage() {
-  const limit = 9;
+  const limit = 16;
 
   // Busca os posts
   const { posts, lastVisibleId } = await fetchInitialPosts(limit);
