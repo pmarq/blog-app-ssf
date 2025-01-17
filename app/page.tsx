@@ -3,29 +3,43 @@
 import React from "react";
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
 import { fetchInitialPosts } from "@/lib/fetchPosts";
-import PostsListWrapper from "./components/common/PostListWrapper";
+
+import HighlightedPost from "./components/common/HighlightedPost"; // Novo componente
 import FeaturedProductsSlider from "./components/common/featured-banner/FeaturedBannerSlider";
+import PostsListWrapper from "./components/common/PostListWrapper";
 
 // Função auxiliar para buscar banners via API interna
 async function fetchFeaturedBanners() {
-  // Em produção, ajuste a URL (ex.: process.env.NEXT_PUBLIC_APP_URL, etc.)
   const res = await fetch("http://localhost:3000/api/featured-banners", {
-    cache: "no-store", // ou 'force-cache' / revalidate / etc., conforme sua estratégia
+    cache: "no-store",
   });
 
   if (!res.ok) {
     throw new Error("Falha ao buscar banners");
   }
 
-  // Retorna um array de banners
   return res.json();
 }
 
 export default async function HomePage() {
-  const limit = 16;
+  const limit = 17; // 1 para HighlightedPost + 16 para PostsListWrapper
 
   // Busca os posts
   const { posts, lastVisibleId } = await fetchInitialPosts(limit);
+
+  if (!posts || posts.length === 0) {
+    return (
+      <DefaultLayout
+        title="Home - Seu Blog"
+        desc="Bem-vindo ao nosso blog onde compartilhamos as últimas novidades e insights."
+      >
+        <p>Nenhum post encontrado.</p>
+      </DefaultLayout>
+    );
+  }
+
+  // Separa o primeiro post como o último post destacado
+  const [latestPost, ...otherPosts] = posts;
 
   // Busca os banners
   const banners = await fetchFeaturedBanners();
@@ -36,16 +50,20 @@ export default async function HomePage() {
       title="Home - Seu Blog"
       desc="Bem-vindo ao nosso blog onde compartilhamos as últimas novidades e insights."
     >
-      {/* Se você tiver um NavBar dentro de DefaultLayout, ele já aparece automaticamente */}
-
-      {/* 1) Renderiza o slider de Banners, passando a prop 'banners' */}
-      <FeaturedProductsSlider banners={banners} />
-
-      {/* 2) Renderiza a lista de posts */}
+      {/* Banner */}
+      <div className="mb-8">
+        <FeaturedProductsSlider banners={banners} />
+      </div>
+      {/* Último Post Destacado */}
+      <div className="mb-8">
+        <HighlightedPost post={latestPost} />
+      </div>
+      {/* Outros Posts */}
+      <h2 className="text-xl bold">Confira também...</h2>
       <PostsListWrapper
-        initialPosts={posts}
+        initialPosts={otherPosts}
         initialLastVisibleId={lastVisibleId}
-        hasMore={false}
+        hasMore={false} // Ajuste conforme a lógica de paginação
         showControls={false}
       />
     </DefaultLayout>

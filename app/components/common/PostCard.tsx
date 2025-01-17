@@ -43,7 +43,7 @@ const PostCard: FC<Props> = ({
             src={thumbnail.url}
             fill // Substitui layout="fill" pela propriedade 'fill' para compatibilidade com as últimas versões
             alt={`Thumbnail for ${title}`}
-            className="object-cover" // Substitui objectFit="cover" pela classe Tailwind correspondente
+            className="object-cover rounded-2xl" // Substitui objectFit="cover" pela classe Tailwind correspondente
           />
         )}
       </div>

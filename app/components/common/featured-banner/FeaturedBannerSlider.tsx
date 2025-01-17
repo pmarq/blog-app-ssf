@@ -63,6 +63,7 @@ export default function FeaturedProductsSlider({ banners }: Props) {
                 src={banner.url} // <-- Use banner.url, que é de fato uma string
                 alt={title}
                 style={{ objectFit: "cover" }}
+                className="rounded-2xl"
               />
             </div>
 

@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
     !token &&
     (pathname.startsWith("/login") ||
       pathname.startsWith("/register") ||
-      pathname.startsWith("/property-search") ||
+      pathname.startsWith("/post-search") ||
       pathname.startsWith("/forgot-password"))
   ) {
     return NextResponse.next();
@@ -84,7 +84,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rotas públicas que não exigem autenticação
-  const publicRoutes = ["/login", "/register", "/property-search", "/forgot-password"];
+  const publicRoutes = [
+    "/login",
+    "/register",
+    "/post-search",
+    "/forgot-password",
+  ];
 
   // Permite acesso às rotas públicas sem autenticação
   if (!token && publicRoutes.some((route) => pathname.startsWith(route))) {
@@ -94,7 +99,9 @@ export async function middleware(request: NextRequest) {
   // Redireciona usuários autenticados para a página inicial ao acessar rotas públicas
   if (
     token &&
-    ["/login", "/register", "/forgot-password"].some((route) => pathname.startsWith(route))
+    ["/login", "/register", "/forgot-password"].some((route) =>
+      pathname.startsWith(route)
+    )
   ) {
     return NextResponse.redirect(new URL("/", request.nextUrl.origin));
   }
@@ -148,6 +155,6 @@ export const config = {
     "/forgot-password",
     "/account",
     "/account/:path*",
-    "/property-search",
+    "/post-search",
   ],
 };
