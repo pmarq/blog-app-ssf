@@ -1,4 +1,4 @@
-// components/Editor.tsx
+// components/editor/index.tsx
 
 "use client";
 
@@ -22,11 +22,13 @@ import { useRouter } from "next/navigation";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { Thumbnail } from "@/app/models/Post";
 import { ThumbnailData } from "@/app/models/ThumbnailData";
+import { Category, getCategories } from "@/lib/categories";
 
 export interface FinalPost extends SeoResult {
   title: string;
   content: string;
   thumbnail?: File | string | ThumbnailData | Thumbnail | null;
+  categoryId?: string;
 }
 
 interface Props {
@@ -322,6 +324,17 @@ export default function Editor({
     setSeoInitialValue({ meta, slug, tags });
   }, [initialValue, editor]);
 
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const cats = await getCategories();
+      cats.sort((a, b) => a.title.localeCompare(b.title)); // <-- ordena por título
+      setCategories(cats);
+    };
+    fetch();
+  }, []);
+
   return (
     <>
       <div className="p-3 dark:bg-primary-dark bg-primary transition">
@@ -350,6 +363,19 @@ export default function Editor({
               />
             </div>
           </div>
+          {/*Categorias*/}
+          <select
+            value={post.categoryId || ""}
+            onChange={(e) => setPost({ ...post, categoryId: e.target.value })}
+            className="mt-6 mb-6 p-2 border rounded text-sm"
+          >
+            <option value="">Selecione uma categoria</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.title}
+              </option>
+            ))}
+          </select>
 
           {/* Título */}
           <input

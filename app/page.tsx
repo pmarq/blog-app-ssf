@@ -3,7 +3,6 @@
 import React from "react";
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
 import { fetchInitialPosts } from "@/lib/fetchPosts";
-
 import HighlightedPost from "./components/common/HighlightedPost"; // Novo componente
 import FeaturedProductsSlider from "./components/common/featured-banner/FeaturedBannerSlider";
 import PostsListWrapper from "./components/common/PostListWrapper";
@@ -17,7 +16,6 @@ async function fetchFeaturedBanners() {
   if (!res.ok) {
     throw new Error("Falha ao buscar banners");
   }
-
   return res.json();
 }
 
@@ -51,7 +49,7 @@ export default async function HomePage() {
       desc="Bem-vindo ao nosso blog onde compartilhamos as últimas novidades e insights."
     >
       {/* Banner */}
-      <div className="mb-8">
+      <div className="mb-14">
         <FeaturedProductsSlider banners={banners} />
       </div>
       {/* Último Post Destacado */}

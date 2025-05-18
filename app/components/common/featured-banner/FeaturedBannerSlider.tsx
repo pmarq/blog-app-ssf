@@ -57,7 +57,7 @@ export default function FeaturedProductsSlider({ banners }: Props) {
         {banners.map(({ banner, title, link, linkTitle }, index) => (
           <div className="select-none relative" key={index}>
             {/* Container da imagem */}
-            <div className="w-full h-[320px] relative">
+            <div className="w-full h-[360px] relative">
               <Image
                 fill
                 src={banner.url} // <-- Use banner.url, que é de fato uma string

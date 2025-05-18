@@ -2,6 +2,12 @@
 
 import { Timestamp, DocumentReference } from "firebase-admin/firestore";
 
+// Interface para Categorias
+export interface Category {
+  id: string;
+  title: string;
+}
+
 // Interface Thumbnail com public_id opcional
 export interface Thumbnail {
   url: string;
@@ -11,9 +17,9 @@ export interface Thumbnail {
 export function isThumbnail(obj: any): obj is Thumbnail {
   return (
     obj &&
-    typeof obj === 'object' &&
-    typeof obj.url === 'string' &&
-    typeof obj.public_id === 'string'
+    typeof obj === "object" &&
+    typeof obj.url === "string" &&
+    typeof obj.public_id === "string"
   );
 }
 
