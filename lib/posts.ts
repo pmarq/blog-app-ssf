@@ -1,5 +1,5 @@
 // app/lib/posts.ts
-import { Post, PostResponse } from "@/app/models/Post";
+import { Post } from "@/app/models/Post";
 import { formatPost } from "@/app/models/Utils";
 import { PostDetail } from "@/app/utils/types";
 import { firestore } from "@/firebase/server";
@@ -7,7 +7,7 @@ import { Timestamp } from "firebase-admin/firestore";
 
 export const getPostBySlug = async (
   slug: string
-): Promise<PostDetail | null> => { // Alterado para PostDetail
+): Promise<PostDetail | null> => {
   try {
     console.log(`Buscando post com slug: ${slug}`);
     const snapshot = await firestore
@@ -24,17 +24,28 @@ export const getPostBySlug = async (
     const doc = snapshot.docs[0];
     const postData = doc.data() as Post;
 
-    const { title, content, thumbnail, tags, meta, createdAt } = postData; // Incluído createdAt
+    const {
+      title,
+      content,
+      thumbnail,
+      tags,
+      meta,
+      createdAt,
+      categoryTitle,
+      categorySlug,
+    } = postData;
 
-    const result: PostDetail = { // Alterado para PostDetail
+    const result: PostDetail = {
       id: doc.id,
       title,
       content,
-      tags: Array.isArray(tags) ? tags : [], // Mantenha tags como array
+      tags: Array.isArray(tags) ? tags : [],
       thumbnail: thumbnail || null,
       slug,
       meta,
-      createdAt: (createdAt as Timestamp).toDate().toISOString(), // Convertendo Timestamp para string ISO
+      categoryTitle,
+      categorySlug,
+      createdAt: (createdAt as Timestamp).toDate().toISOString(),
     };
 
     console.log("Post encontrado:", result);
@@ -131,7 +142,7 @@ export const fetchMorePosts = async (
  */
 export const getAllPostSlugs = async (): Promise<string[]> => {
   try {
-    const snapshot = await firestore.collection('posts').get();
+    const snapshot = await firestore.collection("posts").get();
     const slugs: string[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
@@ -141,7 +152,7 @@ export const getAllPostSlugs = async (): Promise<string[]> => {
     });
     return slugs;
   } catch (error) {
-    console.error('Erro ao buscar slugs dos posts:', error);
+    console.error("Erro ao buscar slugs dos posts:", error);
     return [];
   }
 };

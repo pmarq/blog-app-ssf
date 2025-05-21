@@ -11,6 +11,8 @@ export interface PostDetail {
   tags: string[];
   slug: string;
   thumbnail: Thumbnail | null;
+  categoryTitle: string;
+  categorySlug: string;
   createdAt: string;
 }
 
@@ -23,7 +25,7 @@ export interface IncomingPost {
 }
 
 export interface UserProfile {
-  id: string;  
+  id: string;
   name: string;
   email: string;
   avatar: string | undefined;
@@ -43,7 +45,7 @@ export interface CommentResponse {
   content: string;
   createdAt: string;
   likes: number;
-  likedByOwner: boolean; 
+  likedByOwner: boolean;
   chiefComment: boolean;
   repliedTo: string | null;
   owner: Owner;
@@ -55,7 +57,7 @@ export interface CommentResponse {
 export interface LatestComment {
   id: string;
   owner: Owner;
-  postId:string
+  postId: string;
   content: string;
   belongsTo: {
     id: string;
@@ -67,7 +69,6 @@ export interface LatestComment {
   likedBy: string[];
   replies: CommentResponse[]; // Repostas estruturadas
 }
-
 
 export interface LatestUserProfile {
   id: string;

@@ -17,7 +17,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
   const { currentUser } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  
+
   // Estados para indicar carregamento e mensagens de erro
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -40,7 +40,8 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
     setErrorMessage("");
 
     try {
-      let thumbnailData: { url: string; public_id: string } | undefined = undefined;
+      let thumbnailData: { url: string; public_id: string } | undefined =
+        undefined;
 
       // Se houver nova thumbnail (File), faz upload usando signed uploads do Cloudinary
       if (updatedPost.thumbnail instanceof File) {
@@ -49,20 +50,26 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
 
         // 2. Solicitar a assinatura de upload ao servidor
         const folder = `posts/${post.id}`;
-        const signatureResponse = await fetch(`/api/cloudinary/get-signature?folder=${encodeURIComponent(folder)}`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${idToken}`,
-          },
-        });
+        const signatureResponse = await fetch(
+          `/api/cloudinary/get-signature?folder=${encodeURIComponent(folder)}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+            },
+          }
+        );
 
         if (!signatureResponse.ok) {
           const errorData = await signatureResponse.json();
           console.error("Erro ao obter assinatura:", errorData);
-          throw new Error(errorData.message || "Falha ao obter assinatura para upload.");
+          throw new Error(
+            errorData.message || "Falha ao obter assinatura para upload."
+          );
         }
 
-        const { timestamp, signature, api_key, cloud_name } = await signatureResponse.json();
+        const { timestamp, signature, api_key, cloud_name } =
+          await signatureResponse.json();
 
         // 3. Preparar os dados para upload
         const formData = new FormData();
@@ -73,23 +80,34 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
         formData.append("folder", folder);
 
         // 4. Fazer o upload para Cloudinary
-        const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
-          method: "POST",
-          body: formData,
-        });
+        const uploadResponse = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         const uploadResult = await uploadResponse.json();
 
         if (!uploadResponse.ok) {
-          console.error("Erro ao fazer upload para o Cloudinary:", uploadResult);
-          throw new Error(uploadResult.error?.message || "Falha ao fazer upload da thumbnail.");
+          console.error(
+            "Erro ao fazer upload para o Cloudinary:",
+            uploadResult
+          );
+          throw new Error(
+            uploadResult.error?.message || "Falha ao fazer upload da thumbnail."
+          );
         }
 
         thumbnailData = {
           url: uploadResult.secure_url,
           public_id: uploadResult.public_id,
         };
-      } else if (updatedPost.thumbnail && typeof updatedPost.thumbnail === "object") {
+      } else if (
+        updatedPost.thumbnail &&
+        typeof updatedPost.thumbnail === "object"
+      ) {
         // Mantém a thumbnail existente se não for alterada
         thumbnailData = {
           url: updatedPost.thumbnail.url,
@@ -104,6 +122,8 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
         meta: updatedPost.meta || "",
         tags: updatedPost.tagsArray || [],
         slug: updatedPost.slug || post.slug,
+        categorySlug: updatedPost.categorySlug,
+        categoryTitle: updatedPost.categoryTitle,
         authorId: currentUser.uid, // Passa o authorId para a ação server
       };
 
@@ -140,9 +160,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
       router.replace("/dashboard/posts"); // Redireciona imediatamente após a atualização
     } catch (error: any) {
       console.error("Erro ao atualizar o post:", error);
-      setErrorMessage(
-        error.message || "Ocorreu um erro ao atualizar o post."
-      );
+      setErrorMessage(error.message || "Ocorreu um erro ao atualizar o post.");
       toast({
         title: "Erro!",
         description: error.message || "Ocorreu um erro ao atualizar o post.",
@@ -157,6 +175,8 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
   const initialValue: FinalPost = {
     ...post,
     thumbnail: post.thumbnail || undefined,
+    categorySlug: post.categorySlug || "",
+    categoryTitle: post.categoryTitle || "",
   };
 
   return (
@@ -173,4 +193,3 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
 };
 
 export default EditorWrapper;
-

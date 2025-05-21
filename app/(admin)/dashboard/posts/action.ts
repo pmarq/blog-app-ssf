@@ -101,10 +101,32 @@ export async function createPost(
       );
     }
 
-    // 6. Montar objeto
+    // 6. Category
+
+    let categoryRef: DocumentReference | null = null;
+    let categorySlug = "";
+    let categoryTitle = "";
+
+    if (postData.categoryId) {
+      const categoryDoc = await firestore
+        .collection("categories")
+        .doc(postData.categoryId)
+        .get();
+      if (categoryDoc.exists) {
+        const categoryData = categoryDoc.data();
+        categoryRef = categoryDoc.ref;
+        categorySlug = categoryData?.slug || ""; // <-- você precisa garantir que existe
+        categoryTitle = categoryData?.title || "";
+      }
+    }
+
+    // 7. Montar objeto
     const newPost: Post = {
       id: postId,
       title: postData.title,
+      category: categoryRef,
+      categorySlug,
+      categoryTitle,
       slug: postData.slug,
       meta: postData.meta,
       content: postData.content,
@@ -244,12 +266,20 @@ export async function updatePost(
       postData.tags = postData.tags.split(",").map((t: string) => t.trim());
     }
 
-    // 6. Gerenciar thumbnail
+    //6. Category
+
+    let categoryRef: DocumentReference | null = null;
+    if (postData.categoryId) {
+      categoryRef = firestore.collection("categories").doc(postData.categoryId);
+    }
+
+    // 7. Gerenciar thumbnail
     let updateData: Partial<Post> = {
       title: postData.title,
       slug: postData.slug,
       meta: postData.meta,
       content: postData.content,
+      category: categoryRef,
       tags: postData.tags || [],
       updatedAt: Timestamp.now(),
     };

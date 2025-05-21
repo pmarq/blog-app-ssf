@@ -29,6 +29,8 @@ export interface FinalPost extends SeoResult {
   content: string;
   thumbnail?: File | string | ThumbnailData | Thumbnail | null;
   categoryId?: string;
+  categorySlug?: string;
+  categoryTitle?: string;
 }
 
 interface Props {

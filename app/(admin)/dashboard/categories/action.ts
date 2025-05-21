@@ -5,18 +5,27 @@
 import { firestore } from "@/firebase/server";
 import { revalidatePath } from "next/cache";
 
+function generateSlug(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "") // Remove acentos
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "") // Remove caracteres especiais
+    .replace(/\s+/g, "-"); // Espaços viram hífen
+}
+
 // Cria uma nova categoria (case-insensitive e sem duplicatas)
 export async function createCategory(title: string) {
   const normalizedTitle = title.trim();
-
   if (!normalizedTitle) {
     return { success: false, error: "Título não pode estar vazio." };
   }
 
   const titleLower = normalizedTitle.toLowerCase();
+  const slug = generateSlug(normalizedTitle);
 
   try {
-    // 🔍 Verifica se já existe uma categoria com o mesmo título (case-insensitive)
     const existingSnapshot = await firestore
       .collection("categories")
       .where("title_lowercase", "==", titleLower)
@@ -25,14 +34,14 @@ export async function createCategory(title: string) {
     if (!existingSnapshot.empty) {
       return {
         success: false,
-        error: `A categoria "${normalizedTitle}" já existe.`,
+        error: `A categoria \"${normalizedTitle}\" já existe.`,
       };
     }
 
-    // ✅ Cria a nova categoria com campo auxiliar "title_lowercase"
     const docRef = await firestore.collection("categories").add({
       title: normalizedTitle,
       title_lowercase: titleLower,
+      slug,
     });
 
     revalidatePath("/dashboard/categories");
@@ -44,35 +53,26 @@ export async function createCategory(title: string) {
   }
 }
 
-// deletar categoria
-
-export async function deleteCategory(
-  categoryId: string
-): Promise<{ success: boolean; error?: string }> {
+// Deleta uma categoria (se não estiver sendo usada em posts)
+export async function deleteCategory(categoryId: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
   try {
-    // 🛑 Verifica se existe algum post usando essa categoria (opcional mas recomendado)
     const postsSnapshot = await firestore
       .collection("posts")
-      .where(
-        "category",
-        "==",
-        firestore.collection("categories").doc(categoryId)
-      )
+      .where("category", "==", firestore.doc(`categories/${categoryId}`))
       .limit(1)
       .get();
 
     if (!postsSnapshot.empty) {
       return {
         success: false,
-        error:
-          "Não é possível excluir: categoria está associada a um ou mais posts.",
+        error: "Não é possível excluir: categoria associada a posts.",
       };
     }
 
-    // 🧹 Deleta a categoria
     await firestore.collection("categories").doc(categoryId).delete();
-
-    // ♻️ Atualiza a página de categorias
     revalidatePath("/dashboard/categories");
 
     return { success: true };
@@ -86,17 +86,20 @@ export async function deleteCategory(
 }
 
 // Lista todas as categorias
-
 export async function getAllCategories(): Promise<
-  { id: string; title: string }[]
+  { id: string; title: string; slug: string }[]
 > {
   try {
     const snapshot = await firestore.collection("categories").get();
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as { title: string }),
-    }));
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        slug: data.slug,
+      };
+    });
   } catch (error) {
     console.error("Erro ao buscar categorias:", error);
     return [];

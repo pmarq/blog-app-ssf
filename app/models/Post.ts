@@ -1,6 +1,5 @@
 // app/models/Posts.ts
-
-import { Timestamp, DocumentReference } from "firebase-admin/firestore";
+import { DocumentReference } from "firebase-admin/firestore";
 
 // Interface para Categorias
 export interface Category {
@@ -26,6 +25,9 @@ export function isThumbnail(obj: any): obj is Thumbnail {
 export interface Post {
   id: string;
   title: string;
+  category: DocumentReference | null;
+  categorySlug: string;
+  categoryTitle: string;
   slug: string;
   meta: string;
   content: string;
@@ -43,6 +45,9 @@ export interface Post {
 export interface PostResponse {
   id: string;
   title: string;
+  category: string;
+  categorySlug: string;
+  categoryTitle: string;
   content: string;
   tags: string;
   thumbnail: Thumbnail | null; // Atualizado para usar a interface Thumbnail
