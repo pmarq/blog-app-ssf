@@ -1,7 +1,6 @@
 // app/api/featured-banners/[id]/route.ts
 
 import { NextResponse } from "next/server";
-import { Banner } from "@/app/models/Banners";
 import {
   deleteFeaturedBanner,
   getFeaturedBannerById,

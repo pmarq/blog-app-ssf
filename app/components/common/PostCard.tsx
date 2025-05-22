@@ -27,7 +27,7 @@ const PostCard: FC<Props> = ({
   busy,
   onDeleteClick,
 }): JSX.Element => {
-  const { title, slug, meta, createdAt, tags, thumbnail } = post;
+  const { title, slug, meta, categoryTitle, createdAt, tags, thumbnail } = post;
   console.log("Thumbnail:", thumbnail); // Log para depuração
 
   return (
@@ -55,7 +55,10 @@ const PostCard: FC<Props> = ({
             {dateformat(new Date(createdAt), "d-mmm-yyyy")}
           </span>
         </div>
-        <Link href={"/" + slug} className="flex flex-col flex-1">
+        <Link
+          href={`/${post.categorySlug}/${post.slug}`}
+          className="flex flex-col flex-1"
+        >
           <div className="flex items-center justify-between text-sm text-primary-dark dark:text-primary">
             <div className="flex flex-wrap items-center space-x-1">
               {tags.map((t, index) => (
@@ -80,7 +83,7 @@ const PostCard: FC<Props> = ({
               <>
                 <Link
                   className="hover:underline"
-                  href={"/dashboard/posts/update/" + slug}
+                  href={`/dashboard/posts/update/${post.slug}`}
                 >
                   Editar
                 </Link>

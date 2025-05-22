@@ -17,7 +17,7 @@ const trimText = (text: string, trimBy: number) => {
 };
 
 const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
-  const { title, slug, meta, createdAt, tags, thumbnail } = post;
+  const { title, slug, meta, createdAt, categorySlug, tags, thumbnail } = post;
 
   return (
     <div className="w-full max-w-7xl rounded-4xl overflow-hidden bg-primary dark:bg-primary-dark mx-auto">

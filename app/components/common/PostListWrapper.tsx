@@ -127,13 +127,16 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
         return;
       }
 
-      const res = await fetch(`/api/posts/${postToDelete.slug}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `/api/posts/${postToDelete.categorySlug}/${postToDelete.slug}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) {
         const errorData = await res.json();

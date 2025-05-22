@@ -38,7 +38,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const { slug, categorySlug } = params;
+  const { slug, categorySlug } = await params;
   const post = await getPostByCategoryAndSlug(categorySlug, slug);
 
   if (!post) {
@@ -69,7 +69,7 @@ export async function generateMetadata({
  * Página individual do post por categoria + slug
  */
 export default async function SinglePostPage({ params }: PageProps) {
-  const { slug, categorySlug } = params;
+  const { slug, categorySlug } = await params;
   const post: PostDetail | null = await getPostByCategoryAndSlug(
     categorySlug,
     slug

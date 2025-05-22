@@ -3,7 +3,6 @@
 import { PostDetail } from "@/app/utils/types";
 import { firestore } from "@/firebase/server";
 
-
 export async function fetchInitialPosts(limit: number): Promise<{
   posts: PostDetail[];
   lastVisibleId?: string;
@@ -28,6 +27,8 @@ export async function fetchInitialPosts(limit: number): Promise<{
         tags: data.tags,
         thumbnail: data.thumbnail || "",
         createdAt: data.createdAt.toDate().toISOString(),
+        categorySlug: data.categorySlug || "",
+        categoryTitle: data.categoryTitle || "",
       });
     });
 
@@ -51,7 +52,10 @@ export async function fetchMorePosts(
   hasMore: boolean;
 }> {
   try {
-    const lastDoc = await firestore.collection("posts").doc(lastVisibleId).get();
+    const lastDoc = await firestore
+      .collection("posts")
+      .doc(lastVisibleId)
+      .get();
 
     if (!lastDoc.exists) {
       throw new Error("lastVisibleId inválido.");
@@ -76,6 +80,8 @@ export async function fetchMorePosts(
         tags: data.tags,
         thumbnail: data.thumbnail || "",
         createdAt: data.createdAt.toDate().toISOString(),
+        categorySlug: data.categorySlug || "",
+        categoryTitle: data.categoryTitle || "",
       });
     });
 
