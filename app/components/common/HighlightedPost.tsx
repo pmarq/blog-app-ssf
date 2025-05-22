@@ -22,7 +22,7 @@ const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
   return (
     <div className="w-full max-w-7xl rounded-4xl overflow-hidden bg-primary dark:bg-primary-dark mx-auto">
       <Link
-        href={`/posts/${slug}`}
+        href={`/${post.categorySlug}/${post.slug}`}
         className="flex flex-col md:flex-row no-underline text-inherit"
       >
         {/* Thumbnail */}

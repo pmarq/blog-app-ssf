@@ -57,6 +57,30 @@ export const getPostBySlug = async (
 };
 
 ////////////
+
+export const getPostByCategoryAndSlug = async (
+  categorySlug: string,
+  slug: string
+): Promise<PostDetail | null> => {
+  const snapshot = await firestore
+    .collection("posts")
+    .where("slug", "==", slug)
+    .where("categorySlug", "==", categorySlug)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) return null;
+
+  const doc = snapshot.docs[0];
+  const postData = doc.data() as Post;
+
+  return {
+    ...postData,
+    id: doc.id,
+    createdAt: postData.createdAt.toDate().toISOString(),
+  };
+};
+
 /**
  * Formata os dados do post conforme necessário. */
 
@@ -140,16 +164,23 @@ export const fetchMorePosts = async (
 /**
  * Busca todos os slugs dos posts no Firestore.
  */
-export const getAllPostSlugs = async (): Promise<string[]> => {
+export const getAllPostSlugs = async (): Promise<
+  { slug: string; categorySlug: string }[]
+> => {
   try {
     const snapshot = await firestore.collection("posts").get();
-    const slugs: string[] = [];
+    const slugs: { slug: string; categorySlug: string }[] = [];
+
     snapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.slug) {
-        slugs.push(data.slug);
+      if (data.slug && data.categorySlug) {
+        slugs.push({
+          slug: data.slug,
+          categorySlug: data.categorySlug,
+        });
       }
     });
+
     return slugs;
   } catch (error) {
     console.error("Erro ao buscar slugs dos posts:", error);
