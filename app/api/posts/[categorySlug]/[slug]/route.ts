@@ -96,7 +96,6 @@ export async function PUT(
       categoryId,
     } = body;
 
-    // Monta os dados com possíveis alterações
     const postData = {
       title,
       content,
@@ -109,6 +108,7 @@ export async function PUT(
       categoryId,
     };
 
+    // Validação
     const errorMessage = validateSchema(postValidationSchema, postData);
     if (errorMessage) {
       return NextResponse.json(
@@ -117,25 +117,23 @@ export async function PUT(
       );
     }
 
-    // Busca o post com a categoria antiga
     const postsRef = firestore.collection("posts");
-    const querySnapshot = await postsRef
-      .where("slug", "==", slug)
-      .where("categorySlug", "==", oldCategorySlug)
-      .get();
 
-    if (querySnapshot.empty) {
+    // 1. Busca pelo slug antigo (não depende da categoria para evitar conflitos)
+    const postQuery = await postsRef.where("slug", "==", slug).get();
+
+    if (postQuery.empty) {
       return NextResponse.json(
         { error: true, message: "Post não encontrado." },
         { status: 404 }
       );
     }
 
-    const postDoc = querySnapshot.docs[0];
+    const postDoc = postQuery.docs[0];
     const postId = postDoc.id;
     const existingPost = postDoc.data() as Post;
 
-    // Verifica se o autor tem permissão para editar
+    // 2. Verifica se o autor é o mesmo
     const postAuthorRef =
       existingPost.author as FirebaseFirestore.DocumentReference;
     const postAuthorSnapshot = await postAuthorRef.get();
@@ -151,33 +149,33 @@ export async function PUT(
       );
     }
 
-    // Verifica se o novo slug já está em uso na nova categoria
+    // 3. Verifica se houve mudança de slug ou categoria
     if (
-      postData.slug !== existingPost.slug ||
-      newCategorySlug !== oldCategorySlug
+      newSlug !== existingPost.slug ||
+      newCategorySlug !== existingPost.categorySlug
     ) {
-      const slugSnapshot = await postsRef
-        .where("slug", "==", postData.slug)
+      const duplicateCheck = await postsRef
+        .where("slug", "==", newSlug)
         .where("categorySlug", "==", newCategorySlug)
         .get();
 
-      if (!slugSnapshot.empty) {
+      if (!duplicateCheck.empty && duplicateCheck.docs[0].id !== postId) {
         return NextResponse.json(
           {
             error: true,
-            message: "Slug já está em uso nessa categoria. Escolha outro.",
+            message: "Já existe um post com esse slug nessa categoria.",
           },
           { status: 400 }
         );
       }
     }
 
-    // Formatação de tags
+    // 4. Tratamento das tags
     if (typeof postData.tags === "string") {
       postData.tags = postData.tags.split(",").map((t: string) => t.trim());
     }
 
-    // Upload novo? Substitui thumbnail antiga no Cloudinary
+    // 5. Upload novo? Substitui thumbnail antiga no Cloudinary
     if (postData.thumbnail && isThumbnail(postData.thumbnail)) {
       if (existingPost.thumbnail?.public_id) {
         await deleteFromCloudinary(existingPost.thumbnail.public_id);
@@ -190,6 +188,7 @@ export async function PUT(
       postData.thumbnail = existingPost.thumbnail;
     }
 
+    // 6. Dados finais a serem atualizados
     const updateData: Partial<Post> = {
       title: postData.title,
       slug: postData.slug,
@@ -209,6 +208,7 @@ export async function PUT(
       };
     }
 
+    // 7. Atualização final
     await postsRef.doc(postId).update(updateData);
 
     return NextResponse.json(
