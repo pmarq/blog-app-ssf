@@ -33,6 +33,7 @@ export const getPostBySlug = async (
       createdAt,
       categoryTitle,
       categorySlug,
+      category,
     } = postData;
 
     const result: PostDetail = {
@@ -45,6 +46,7 @@ export const getPostBySlug = async (
       meta,
       categoryTitle,
       categorySlug,
+      categoryId: category?.id || "",
       createdAt: (createdAt as Timestamp).toDate().toISOString(),
     };
 
@@ -75,8 +77,16 @@ export const getPostByCategoryAndSlug = async (
   const postData = doc.data() as Post;
 
   return {
-    ...postData,
     id: doc.id,
+    title: postData.title,
+    content: postData.content,
+    meta: postData.meta,
+    tags: Array.isArray(postData.tags) ? postData.tags : [],
+    slug: postData.slug,
+    thumbnail: postData.thumbnail || null,
+    categoryTitle: postData.categoryTitle,
+    categorySlug: postData.categorySlug,
+    categoryId: postData.category?.id || "",
     createdAt: postData.createdAt.toDate().toISOString(),
   };
 };

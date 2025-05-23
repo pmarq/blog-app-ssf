@@ -1,7 +1,4 @@
-export interface Thumbnail {
-  url: string;
-  public_id?: string;
-}
+import { Thumbnail } from "../models/Post";
 
 export interface PostDetail {
   id: string;
@@ -13,6 +10,7 @@ export interface PostDetail {
   thumbnail: Thumbnail | null;
   categoryTitle: string;
   categorySlug: string;
+  categoryId: string;
   createdAt: string;
 }
 

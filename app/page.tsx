@@ -8,17 +8,19 @@ import FeaturedProductsSlider from "./components/common/featured-banner/Featured
 import PostsListWrapper from "./components/common/PostListWrapper";
 
 // Função auxiliar para buscar banners via API interna
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
 async function fetchFeaturedBanners() {
-  const res = await fetch("http://localhost:3000/api/featured-banners", {
+  const res = await fetch(`${baseUrl}/api/featured-banners`, {
     cache: "no-store",
   });
 
   if (!res.ok) {
     throw new Error("Falha ao buscar banners");
   }
+
   return res.json();
 }
-
 export default async function HomePage() {
   const limit = 17; // 1 para HighlightedPost + 16 para PostsListWrapper
 

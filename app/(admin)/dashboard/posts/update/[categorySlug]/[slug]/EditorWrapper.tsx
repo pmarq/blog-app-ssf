@@ -1,16 +1,16 @@
-// app/(admin)/dashboard/posts/update/EditorWrapper.tsx
+// app/(admin)/dashboard/posts/update//[categoySlug]/[slug]/EditorWrapper.tsx
 
 "use client";
 
 import React, { useState } from "react";
-import { PostResponse } from "@/app/models/Post";
 import Editor, { FinalPost } from "@/app/components/common/editor";
 import { useAuth } from "@/context/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { PostDetail } from "@/app/utils/types";
 
 interface EditorWrapperProps {
-  post: PostResponse;
+  post: PostDetail;
 }
 
 const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
@@ -124,6 +124,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
         slug: updatedPost.slug || post.slug,
         categorySlug: updatedPost.categorySlug,
         categoryTitle: updatedPost.categoryTitle,
+        categoryId: updatedPost.categoryId,
         authorId: currentUser.uid, // Passa o authorId para a ação server
       };
 
@@ -135,14 +136,17 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
       }
 
       // Atualiza o post no Firestore via uma requisição PUT para a API
-      const response = await fetch(`/api/posts/${post.slug}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          // Inclua o token de autenticação se necessário
-        },
-        body: JSON.stringify(postData),
-      });
+      const response = await fetch(
+        `/api/posts/${post.categorySlug}/${post.slug}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            // Authorization, etc., se necessário
+          },
+          body: JSON.stringify(postData),
+        }
+      );
 
       const result = await response.json();
 
@@ -174,9 +178,11 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
   // Garantir que post.thumbnail esteja conforme FinalPost
   const initialValue: FinalPost = {
     ...post,
+    tags: post.tags.join(", "),
     thumbnail: post.thumbnail || undefined,
     categorySlug: post.categorySlug || "",
     categoryTitle: post.categoryTitle || "",
+    categoryId: post.categoryId || "",
   };
 
   return (

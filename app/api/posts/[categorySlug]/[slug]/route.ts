@@ -1,4 +1,4 @@
-// app/api/posts/[slug]/route.ts
+// app/api/posts/[categorySlug]/[slug]/route.ts
 
 import { isThumbnail, Post } from "@/app/models/Post";
 import { auth, firestore } from "@/firebase/server";
@@ -79,7 +79,7 @@ export async function PUT(
   request: NextRequest,
   context: { params: { slug: string; categorySlug: string } }
 ) {
-  const { slug, categorySlug } = context.params;
+  const { slug, categorySlug: oldCategorySlug } = context.params;
 
   try {
     const body = await request.json();
@@ -91,9 +91,12 @@ export async function PUT(
       slug: newSlug,
       thumbnail,
       authorId,
+      categorySlug: newCategorySlug,
       categoryTitle,
+      categoryId,
     } = body;
 
+    // Monta os dados com possíveis alterações
     const postData = {
       title,
       content,
@@ -101,11 +104,10 @@ export async function PUT(
       tags: tagsArray,
       slug: newSlug || slug,
       thumbnail,
-      categorySlug,
+      categorySlug: newCategorySlug,
       categoryTitle,
+      categoryId,
     };
-
-    console.log("Atualizando post:", { slug, categorySlug, postData });
 
     const errorMessage = validateSchema(postValidationSchema, postData);
     if (errorMessage) {
@@ -115,10 +117,11 @@ export async function PUT(
       );
     }
 
+    // Busca o post com a categoria antiga
     const postsRef = firestore.collection("posts");
     const querySnapshot = await postsRef
       .where("slug", "==", slug)
-      .where("categorySlug", "==", categorySlug)
+      .where("categorySlug", "==", oldCategorySlug)
       .get();
 
     if (querySnapshot.empty) {
@@ -132,6 +135,7 @@ export async function PUT(
     const postId = postDoc.id;
     const existingPost = postDoc.data() as Post;
 
+    // Verifica se o autor tem permissão para editar
     const postAuthorRef =
       existingPost.author as FirebaseFirestore.DocumentReference;
     const postAuthorSnapshot = await postAuthorRef.get();
@@ -147,38 +151,43 @@ export async function PUT(
       );
     }
 
-    if (postData.slug !== existingPost.slug) {
+    // Verifica se o novo slug já está em uso na nova categoria
+    if (
+      postData.slug !== existingPost.slug ||
+      newCategorySlug !== oldCategorySlug
+    ) {
       const slugSnapshot = await postsRef
         .where("slug", "==", postData.slug)
-        .where("categorySlug", "==", categorySlug)
+        .where("categorySlug", "==", newCategorySlug)
         .get();
+
       if (!slugSnapshot.empty) {
         return NextResponse.json(
           {
             error: true,
-            message: "Slug já está em uso. Por favor, escolha outro.",
+            message: "Slug já está em uso nessa categoria. Escolha outro.",
           },
           { status: 400 }
         );
       }
     }
 
+    // Formatação de tags
     if (typeof postData.tags === "string") {
       postData.tags = postData.tags.split(",").map((t: string) => t.trim());
     }
 
-    if (postData.thumbnail) {
-      if (isThumbnail(postData.thumbnail)) {
-        if (existingPost.thumbnail?.public_id) {
-          await deleteFromCloudinary(existingPost.thumbnail.public_id);
-        }
-      } else if (
-        typeof postData.thumbnail === "object" &&
-        "url" in postData.thumbnail &&
-        !("public_id" in postData.thumbnail)
-      ) {
-        postData.thumbnail = existingPost.thumbnail;
+    // Upload novo? Substitui thumbnail antiga no Cloudinary
+    if (postData.thumbnail && isThumbnail(postData.thumbnail)) {
+      if (existingPost.thumbnail?.public_id) {
+        await deleteFromCloudinary(existingPost.thumbnail.public_id);
       }
+    } else if (
+      typeof postData.thumbnail === "object" &&
+      "url" in postData.thumbnail &&
+      !("public_id" in postData.thumbnail)
+    ) {
+      postData.thumbnail = existingPost.thumbnail;
     }
 
     const updateData: Partial<Post> = {
@@ -189,6 +198,7 @@ export async function PUT(
       tags: postData.tags || [],
       categorySlug: postData.categorySlug,
       categoryTitle: postData.categoryTitle,
+      category: postData.categoryId,
       updatedAt: Timestamp.now(),
     };
 
@@ -208,7 +218,7 @@ export async function PUT(
   } catch (error: any) {
     console.error("Erro ao atualizar post:", error);
     return NextResponse.json(
-      { error: true, message: error.message || "Falha ao atualizar o post" },
+      { error: true, message: error.message || "Falha ao atualizar o post." },
       { status: 500 }
     );
   }

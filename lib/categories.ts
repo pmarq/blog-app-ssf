@@ -6,6 +6,7 @@ import { db } from "@/firebase/client";
 export interface Category {
   id: string;
   title: string;
+  slug: string;
 }
 
 export async function getCategories(): Promise<Category[]> {

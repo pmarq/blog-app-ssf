@@ -368,7 +368,19 @@ export default function Editor({
           {/*Categorias*/}
           <select
             value={post.categoryId || ""}
-            onChange={(e) => setPost({ ...post, categoryId: e.target.value })}
+            onChange={(e) => {
+              const selectedId = e.target.value;
+              const selectedCategory = categories.find(
+                (cat) => cat.id === selectedId
+              );
+
+              setPost({
+                ...post,
+                categoryId: selectedId,
+                categorySlug: selectedCategory?.slug || "",
+                categoryTitle: selectedCategory?.title || "",
+              });
+            }}
             className="mt-6 mb-6 p-2 border rounded text-sm"
           >
             <option value="">Selecione uma categoria</option>
