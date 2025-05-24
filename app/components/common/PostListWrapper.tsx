@@ -127,16 +127,13 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
         return;
       }
 
-      const res = await fetch(
-        `/api/posts/${postToDelete.categorySlug}/${postToDelete.slug}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch(`/api/posts/${postToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -149,11 +146,8 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
         description: result.message || "Post deletado com sucesso.",
         variant: "default",
       });
-
       // Remover o post da lista local
-      setPosts((prev) =>
-        prev.filter((post) => post.slug !== postToDelete.slug)
-      );
+      setPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
     } catch (error: any) {
       console.error("Erro ao deletar o post:", error);
       toast({

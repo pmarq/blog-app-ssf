@@ -1,4 +1,4 @@
-// app/(admin)/dashboard/posts/update//[categoySlug]/[slug]/EditorWrapper.tsx
+// app/(admin)/dashboard/posts/update/[id]/EditorWrapper.tsx
 
 "use client";
 
@@ -18,6 +18,9 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
   const router = useRouter();
   const { toast } = useToast();
 
+  /* ── estado local do post ─────────────────── */
+  const [localPost, setLocalPost] = useState<PostDetail>(post);
+
   // Estados para indicar carregamento e mensagens de erro
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -26,6 +29,8 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
    * Handle submit para atualizar o post.
    * @param updatedPost Os dados atualizados do post.
    */
+
+  /* ---------- submit ---------- */
   const handleSubmit = async (updatedPost: FinalPost) => {
     if (!currentUser) {
       toast({
@@ -120,7 +125,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
         title: updatedPost.title,
         content: updatedPost.content,
         meta: updatedPost.meta || "",
-        tags: updatedPost.tagsArray || [],
+        tagsArray: updatedPost.tagsArray ?? post.tags,
         slug: updatedPost.slug || post.slug,
         categorySlug: updatedPost.categorySlug,
         categoryTitle: updatedPost.categoryTitle,
@@ -136,17 +141,15 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
       }
 
       // Atualiza o post no Firestore via uma requisição PUT para a API
-      const response = await fetch(
-        `/api/posts/${post.categorySlug}/${post.slug}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            // Authorization, etc., se necessário
-          },
-          body: JSON.stringify(postData),
-        }
-      );
+      const idToken = await currentUser.getIdToken();
+      const response = await fetch(`/api/posts/${post.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(postData),
+      });
 
       const result = await response.json();
 
@@ -154,13 +157,26 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
         throw new Error(result.message || "Falha ao atualizar o post.");
       }
 
+      /* === AQUI: sincroniza o estado local com o que acabou de ser salvo === */
+      setLocalPost((prev) => ({
+        ...prev,
+        ...updatedPost, // título, conteúdo, etc.
+        thumbnail: postData.thumbnail, // objeto normalizado
+        tags: postData.tagsArray ?? prev.tags,
+        slug: postData.slug,
+        categorySlug: postData.categorySlug,
+        categoryTitle: postData.categoryTitle,
+        categoryId: postData.categoryId,
+      }));
+
+      /* ---------- feedback para o usuário ---------- */
+
       // Sucesso: Informar o usuário e redirecionar imediatamente
       toast({
         title: "Sucesso!",
         description: "Post atualizado com sucesso!",
         variant: "default",
       });
-
       router.replace("/dashboard/posts"); // Redireciona imediatamente após a atualização
     } catch (error: any) {
       console.error("Erro ao atualizar o post:", error);
@@ -177,12 +193,12 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
 
   // Garantir que post.thumbnail esteja conforme FinalPost
   const initialValue: FinalPost = {
-    ...post,
-    tags: post.tags.join(", "),
-    thumbnail: post.thumbnail || undefined,
-    categorySlug: post.categorySlug || "",
-    categoryTitle: post.categoryTitle || "",
-    categoryId: post.categoryId || "",
+    ...localPost,
+    tags: localPost.tags.join(", "),
+    thumbnail: localPost.thumbnail || undefined,
+    categorySlug: localPost.categorySlug,
+    categoryTitle: localPost.categoryTitle,
+    categoryId: localPost.categoryId,
   };
 
   return (

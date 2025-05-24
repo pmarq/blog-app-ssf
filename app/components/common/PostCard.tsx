@@ -82,8 +82,8 @@ const PostCard: FC<Props> = ({
             ) : (
               <>
                 <Link
+                  href={`/dashboard/posts/update/${post.id}`}
                   className="hover:underline"
-                  href={`/dashboard/posts/update/${post.categorySlug}/${post.slug}`}
                 >
                   Editar
                 </Link>

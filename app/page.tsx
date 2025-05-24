@@ -59,13 +59,15 @@ export default async function HomePage() {
         <HighlightedPost post={latestPost} />
       </div>
       {/* Outros Posts */}
-      <h2 className="text-xl bold">Confira também...</h2>
-      <PostsListWrapper
-        initialPosts={otherPosts}
-        initialLastVisibleId={lastVisibleId}
-        hasMore={false} // Ajuste conforme a lógica de paginação
-        showControls={false}
-      />
+      <div className="p-10">
+        <h2 className="text-xl mb-4">Confira também...</h2>
+        <PostsListWrapper
+          initialPosts={otherPosts}
+          initialLastVisibleId={lastVisibleId}
+          hasMore={false} // Ajuste conforme a lógica de paginação
+          showControls={false}
+        />
+      </div>
     </DefaultLayout>
   );
 }

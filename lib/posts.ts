@@ -197,3 +197,21 @@ export const getAllPostSlugs = async (): Promise<
     return [];
   }
 };
+
+///////
+
+export const getPostById = async (id: string): Promise<PostDetail | null> => {
+  try {
+    const snap = await firestore.doc(`posts/${id}`).get();
+
+    if (!snap.exists) return null;
+
+    // Dados crus vindos do Firestore
+    const data = snap.data() as Post;
+
+    return formatPost({ ...data, id: snap.id });
+  } catch (error) {
+    console.error("Erro em getPostById:", error);
+    return null;
+  }
+};

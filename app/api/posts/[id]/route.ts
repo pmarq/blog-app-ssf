@@ -1,0 +1,224 @@
+// app/api/posts/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { Timestamp } from "firebase-admin/firestore";
+import { firestore, auth } from "@/firebase/server";
+import { isThumbnail, Post } from "@/app/models/Post";
+import { validateSchema, postValidationSchema } from "@/lib/validationSchema";
+import { deleteFromCloudinary } from "@/lib/cloudinary.server";
+
+// ---------- tipos de resposta ----------
+interface APIResponse {
+  success?: boolean;
+  error?: boolean;
+  message?: string;
+}
+
+// ---------- utilidades ----------
+function duplicateSlugQuery(slug: string, cat: string, excludeId: string) {
+  return firestore
+    .collection("posts")
+    .where("slug", "==", slug)
+    .where("categorySlug", "==", cat)
+    .where("__name__", "!=", excludeId) // exclui o próprio doc
+    .limit(1)
+    .get();
+}
+
+// ---------- GET /api/posts/:id ----------
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const docSnap = await firestore.doc(`posts/${params.id}`).get();
+    if (!docSnap.exists)
+      return NextResponse.json(
+        { error: "Post não encontrado." },
+        { status: 404 }
+      );
+
+    const data = docSnap.data() as Post;
+    return NextResponse.json({
+      // devolva só o que você realmente precisa no front:
+      thumbnail: data.thumbnail?.url ?? null,
+      images: (data.images || []).map((i) => ({ path: i.path, url: i.url })),
+    });
+  } catch (e) {
+    console.error("GET post", e);
+    return NextResponse.json(
+      { error: "Erro interno do servidor." },
+      { status: 500 }
+    );
+  }
+}
+
+// ---------- PUT /api/posts/:id ----------
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: postId } = await params;
+
+  try {
+    /* ---------- corpo da requisição ---------- */
+    const body = await req.json();
+    const {
+      title,
+      content,
+      meta,
+      tagsArray,
+      slug: newSlug,
+      thumbnail,
+      authorId,
+      categorySlug: newCatSlug,
+      categoryTitle,
+      categoryId,
+    } = body;
+
+    /* ---------- documento atual ---------- */
+    const docRef = firestore.doc(`posts/${postId}`);
+    const snap = await docRef.get();
+    if (!snap.exists) {
+      return NextResponse.json(
+        { error: true, message: "Post não encontrado." },
+        { status: 404 }
+      );
+    }
+    const existing = snap.data() as Post;
+
+    /* ---------- permissão ---------- */
+    const existingAuthorId = (
+      existing.author as FirebaseFirestore.DocumentReference
+    ).id;
+    if (existingAuthorId !== authorId) {
+      return NextResponse.json(
+        { error: true, message: "Sem permissão para editar." },
+        { status: 403 }
+      );
+    }
+
+    /* ---------- tags nunca undefined ---------- */
+    const rawTags = body.tagsArray ?? body.tags;
+    const parsedTags: string[] = Array.isArray(rawTags)
+      ? rawTags
+      : typeof rawTags === "string"
+      ? rawTags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
+
+    const finalTags = parsedTags.length > 0 ? parsedTags : existing.tags ?? [];
+
+    /* ---------- unicidade slug + categoria ---------- */
+    const targetSlug = newSlug || existing.slug;
+    const targetCat = newCatSlug || existing.categorySlug;
+    const dup = await duplicateSlugQuery(targetSlug, targetCat, postId);
+    if (!dup.empty) {
+      return NextResponse.json(
+        { error: true, message: "Slug já existe nesta categoria." },
+        { status: 400 }
+      );
+    }
+
+    /* ---------- categoria → referência ---------- */
+    const categoryRef = categoryId
+      ? firestore.doc(`categories/${categoryId}`)
+      : (existing.category as FirebaseFirestore.DocumentReference | null);
+
+    /* ---------- thumbnail ---------- */
+    let thumbToSave = existing.thumbnail;
+    if (thumbnail && isThumbnail(thumbnail)) {
+      if (existing.thumbnail?.public_id) {
+        await deleteFromCloudinary(existing.thumbnail.public_id);
+      }
+      thumbToSave = {
+        url: thumbnail.url,
+        public_id: thumbnail.public_id,
+      };
+    }
+
+    /* ---------- objeto de update ---------- */
+    const update: Partial<Post> = {
+      title,
+      content,
+      meta,
+      slug: targetSlug,
+      tags: finalTags,
+      categorySlug: targetCat,
+      categoryTitle,
+      category: categoryRef,
+      thumbnail: thumbToSave,
+      updatedAt: Timestamp.now(),
+    };
+
+    /* ---------- validação ---------- */
+    const err = validateSchema(postValidationSchema, {
+      ...update,
+      categoryId,
+    });
+    if (err) {
+      return NextResponse.json({ error: true, message: err }, { status: 400 });
+    }
+
+    /* ---------- grava ---------- */
+    await docRef.update(update);
+
+    return NextResponse.json(
+      { success: true, message: "Post atualizado com sucesso." },
+      { status: 200 }
+    );
+  } catch (e: any) {
+    console.error("PUT post", e);
+    return NextResponse.json(
+      { error: true, message: e.message || "Falha ao atualizar." },
+      { status: 500 }
+    );
+  }
+}
+
+// ---------- DELETE /api/posts/:id ----------
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const postId = params.id;
+
+  try {
+    // 1. autenticação
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer "))
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const token = authHeader.split("Bearer ")[1];
+    const decoded = await auth.verifyIdToken(token);
+    if (!decoded)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // 2. carrega doc
+    const docRef = firestore.doc(`posts/${postId}`);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists)
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    const post = docSnap.data() as Post;
+    if ((post.author as FirebaseFirestore.DocumentReference).id !== decoded.uid)
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    // 3. remove thumbnail no Cloudinary
+    if (post.thumbnail?.public_id)
+      await deleteFromCloudinary(post.thumbnail.public_id);
+
+    // 4. deleta doc
+    await docRef.delete();
+
+    return NextResponse.json(
+      { success: true, message: "Post deletado com sucesso." },
+      { status: 200 }
+    );
+  } catch (e) {
+    console.error("DELETE post", e);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+  }
+}
