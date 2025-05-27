@@ -7,7 +7,8 @@ import { FC } from "react";
 import dateformat from "dateformat";
 import Link from "next/link";
 import { PostDetail } from "@/app/utils/types";
-import { Loader2 } from "lucide-react"; // Certifique-se de instalar a biblioteca lucide-react ou use outro ícone
+import { Loader2 } from "lucide-react";
+import { Badge } from "./Badge";
 
 interface Props {
   post: PostDetail;
@@ -28,7 +29,6 @@ const PostCard: FC<Props> = ({
   onDeleteClick,
 }): JSX.Element => {
   const { title, slug, meta, categoryTitle, createdAt, tags, thumbnail } = post;
-  console.log("Thumbnail:", thumbnail); // Log para depuração
 
   return (
     <div className="rounded shadow-sm shadow-secondary-dark overflow-hidden bg-primary dark:bg-primary-dark transition flex flex-col h-full">
@@ -41,35 +41,46 @@ const PostCard: FC<Props> = ({
         ) : (
           <Image
             src={thumbnail.url}
-            fill // Substitui layout="fill" pela propriedade 'fill' para compatibilidade com as últimas versões
+            fill
             alt={`Thumbnail for ${title}`}
-            className="object-cover rounded-2xl" // Substitui objectFit="cover" pela classe Tailwind correspondente
+            className="object-cover rounded-2xl"
           />
         )}
       </div>
 
       {/* Informações do Post */}
+
       <div className="p-2 flex-1 flex flex-col">
-        <div className="flex justify-end">
+        {/* Categoria + Data na mesma linha */}
+        <div className="flex justify-between items-center mb-2">
+          <Badge variant="neutral" className="w-fit text-sm">
+            {categoryTitle}
+          </Badge>
           <span className="text-sm text-secondary-dark">
             {dateformat(new Date(createdAt), "d-mmm-yyyy")}
           </span>
         </div>
+
         <Link
           href={`/${post.categorySlug}/${post.slug}`}
           className="flex flex-col flex-1"
         >
-          <div className="flex items-center justify-between text-sm text-primary-dark dark:text-primary">
+          {/* Tags */}
+          <div className="flex items-center justify-between text-xs text-primary-dark dark:text-primary mb-2">
             <div className="flex flex-wrap items-center space-x-1">
               {tags.map((t, index) => (
                 <span key={`${t}-${index}`}>#{t}</span>
               ))}
             </div>
           </div>
-          <h1 className="font-semibold text-primary-dark dark:text-primary">
+
+          {/* Título e descrição */}
+          <h1 className="font-semibold text-primary-dark dark:text-primary mb-1">
             {trimText(title, 50)}
           </h1>
-          <p className="text-secondary-dark">{trimText(meta, 70)}</p>
+          <p className="text-secondary-dark !text-[14px] mb-2">
+            {trimText(meta, 70)}
+          </p>
         </Link>
 
         {controls && (
