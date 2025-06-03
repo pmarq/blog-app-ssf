@@ -1,6 +1,6 @@
 // app/models/Banner.ts
 
-import { Timestamp, DocumentReference } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 export interface Banner {
   id: string;

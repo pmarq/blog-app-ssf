@@ -81,7 +81,7 @@ export default function Editor({
       TipTapImage.configure({ HTMLAttributes: { class: "mx-auto" } }),
     ],
     editorProps: {
-      handleClick(view, pos, event) {
+      handleClick(view, pos) {
         const { state } = view;
         const range = getMarkRange(
           state.doc.resolve(pos),
@@ -95,7 +95,7 @@ export default function Editor({
       },
     },
     content: "",
-    onUpdate: ({ editor }) => {
+    onUpdate: () => {
       // Exemplo: se quiser capturar o conteúdo a cada digitação
     },
     immediatelyRender: false, // Essencial para evitar problemas de SSR

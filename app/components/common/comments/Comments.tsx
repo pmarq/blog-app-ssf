@@ -29,11 +29,6 @@ const Comments: FC<Props> = ({ belongsTo }) => {
     }
   };
 
-  useEffect(() => {
-    if (!belongsTo) return;
-    fetchComments(belongsTo);
-  }, [belongsTo, currentUser]);
-
   // 1) Buscar comentários (GET /api/comments?postId=...)
   const fetchComments = useCallback(
     async (postId: string) => {
@@ -74,6 +69,7 @@ const Comments: FC<Props> = ({ belongsTo }) => {
     if (!belongsTo) return;
     fetchComments(belongsTo);
   }, [belongsTo, currentUser, fetchComments]);
+
   // 2) Criar novo comentário (chiefComment)
   const handleNewCommentSubmit = async (content: string) => {
     if (!currentUser) return;

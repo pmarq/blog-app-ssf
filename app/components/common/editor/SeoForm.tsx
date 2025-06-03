@@ -28,8 +28,9 @@ const SEOForm: FC<Props> = ({
   const handleChange: ChangeEventHandler<
     HTMLTextAreaElement | HTMLInputElement
   > = ({ target }) => {
-    let { name, value } = target;
-    if (name === "meta") value = value.substring(0, 150);
+    const { name, value: inputValue } = target;
+    const value = name === "meta" ? inputValue.substring(0, 150) : inputValue;
+
     const newValues = { ...values, [name]: value };
     setValues(newValues);
     onChange(newValues);
@@ -40,7 +41,7 @@ const SEOForm: FC<Props> = ({
     const newValues = { ...values, slug };
     setValues(newValues);
     onChange(newValues);
-  }, [title]);
+  }, [title, onChange, values]);
 
   useEffect(() => {
     if (initialValue) {

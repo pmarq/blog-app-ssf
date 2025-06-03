@@ -51,14 +51,12 @@ type FeaturedBannerFormInputs = z.infer<typeof FeaturedBannerSchema>;
 
 interface Props {
   initialValue?: FeaturedBanner;
-  btnTitle?: string;
   busy?: boolean;
   onSubmit?: () => Promise<void>;
 }
 
 const FeaturedBannerForm: React.FC<Props> = ({
   initialValue,
-  btnTitle = "Enviar",
   busy = false,
   onSubmit,
 }) => {
@@ -231,6 +229,7 @@ const FeaturedBannerForm: React.FC<Props> = ({
                     accept="image/*"
                     id="banner-file"
                     className="hidden"
+                    ref={field.ref}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {

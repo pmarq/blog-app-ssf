@@ -34,7 +34,7 @@ const GalleryModal: FC<Props> = ({
   const userId = currentUser?.uid;
 
   const handleClose = () => {
-    onClose && onClose();
+    if (onClose) onClose();
   };
 
   const handleOnImageChange: ChangeEventHandler<HTMLInputElement> = async ({

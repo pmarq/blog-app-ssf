@@ -28,7 +28,7 @@ const PostCard: FC<Props> = ({
   busy,
   onDeleteClick,
 }): JSX.Element => {
-  const { title, slug, meta, categoryTitle, createdAt, tags, thumbnail } = post;
+  const { title, meta, categoryTitle, createdAt, tags, thumbnail } = post;
 
   return (
     <div className="rounded shadow-sm shadow-secondary-dark overflow-hidden bg-primary dark:bg-primary-dark transition flex flex-col h-full">

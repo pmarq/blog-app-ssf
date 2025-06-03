@@ -51,9 +51,9 @@ const CommentCard: FC<Props> = ({
 
   const handleCommentSubmit = (commentContent: string) => {
     if (initialState) {
-      onUpdateSubmit && onUpdateSubmit(commentContent);
+      onUpdateSubmit?.(commentContent);
     } else {
-      onReplySubmit && onReplySubmit(commentContent);
+      onReplySubmit?.(commentContent);
     }
     hideReplyForm();
   };

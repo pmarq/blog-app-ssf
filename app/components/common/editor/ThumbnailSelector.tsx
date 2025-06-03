@@ -13,8 +13,13 @@ interface Props {
 const commonClass =
   "border border-dashed border-secondary-dark flex items-center justify-center rounded cursor-pointer aspect-video";
 
-const ThumbnailSelector: FC<Props> = ({ initialValue, onChange }): JSX.Element => {
-  const [selectedThumbnail, setSelectedThumbnail] = useState<string | undefined>(undefined);
+const ThumbnailSelector: FC<Props> = ({
+  initialValue,
+  onChange,
+}): JSX.Element => {
+  const [selectedThumbnail, setSelectedThumbnail] = useState<
+    string | undefined
+  >(undefined);
   const [objectURL, setObjectURL] = useState<string | undefined>(undefined);
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = ({ target }) => {
@@ -31,7 +36,9 @@ const ThumbnailSelector: FC<Props> = ({ initialValue, onChange }): JSX.Element =
     }
 
     if (file.size > maxSize) {
-      alert("A imagem selecionada é muito grande. O tamanho máximo permitido é de 5MB.");
+      alert(
+        "A imagem selecionada é muito grande. O tamanho máximo permitido é de 5MB."
+      );
       return;
     }
 
@@ -52,13 +59,13 @@ const ThumbnailSelector: FC<Props> = ({ initialValue, onChange }): JSX.Element =
     } else if (initialValue && "url" in initialValue) {
       setSelectedThumbnail(initialValue.url);
     }
-    // Limpeza ao desmontar o componente
+
     return () => {
       if (objectURL) {
         URL.revokeObjectURL(objectURL);
       }
     };
-  }, [initialValue]);
+  }, [initialValue, objectURL]);
 
   return (
     <div className="w-32">
@@ -84,7 +91,10 @@ const ThumbnailSelector: FC<Props> = ({ initialValue, onChange }): JSX.Element =
   );
 };
 
-const PosterUI: FC<{ label: string; className?: string }> = ({ label, className }) => {
+const PosterUI: FC<{ label: string; className?: string }> = ({
+  label,
+  className,
+}) => {
   return (
     <div className={classNames(commonClass, className)}>
       <span>{label}</span>

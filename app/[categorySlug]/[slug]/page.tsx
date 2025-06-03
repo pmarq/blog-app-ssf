@@ -35,10 +35,11 @@ export async function generateStaticParams() {
 /**
  * Gera metadados dinâmicos com base no slug + categoria.
  */
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
-  const { slug, categorySlug } = await params;
+export async function generateMetadata(context: {
+  params: { slug: string; categorySlug: string };
+}): Promise<Metadata> {
+  const { slug, categorySlug } = context.params;
+
   const post = await getPostByCategoryAndSlug(categorySlug, slug);
 
   if (!post) {

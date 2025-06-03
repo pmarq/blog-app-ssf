@@ -2,9 +2,7 @@
 
 import { FC } from "react";
 
-interface Props {}
-
-const SearchBar: FC<Props> = (props): JSX.Element => {
+const SearchBar: FC = (): JSX.Element => {
   return (
     <input
       placeholder="Search..."
