@@ -29,6 +29,7 @@ export async function fetchInitialPosts(limit: number): Promise<{
         createdAt: data.createdAt.toDate().toISOString(),
         categorySlug: data.categorySlug || "",
         categoryTitle: data.categoryTitle || "",
+        categoryId: data.category?.id || "",
       });
     });
 
@@ -82,6 +83,7 @@ export async function fetchMorePosts(
         createdAt: data.createdAt.toDate().toISOString(),
         categorySlug: data.categorySlug || "",
         categoryTitle: data.categoryTitle || "",
+        categoryId: data.category?.id || "",
       });
     });
 

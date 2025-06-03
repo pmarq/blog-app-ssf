@@ -9,9 +9,9 @@ import {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await context.params;
 
   try {
     const banner = await getFeaturedBannerById(id);
@@ -29,18 +29,17 @@ export async function GET(
     return NextResponse.json({ error: true, message }, { status: 500 });
   }
 }
+
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await context.params;
 
   try {
     const data = await request.json();
-
     const { title, link, linkTitle, imageUrl, publicId } = data;
 
-    // Validar dados
     if (!title || !link || !linkTitle || !imageUrl || !publicId) {
       return NextResponse.json(
         { error: true, message: "Dados do banner estão incompletos." },
@@ -76,9 +75,9 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await context.params;
 
   try {
     const response = await deleteFeaturedBanner(id);

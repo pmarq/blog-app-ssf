@@ -10,13 +10,6 @@ import SafeContent from "@/app/components/common/SafeContent";
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
 import Comments from "@/app/components/common/comments/Comments";
 
-interface PageProps {
-  params: {
-    slug: string;
-    categorySlug: string;
-  };
-}
-
 // ⏱ ISR: revalida a cada 60 segundos
 export const revalidate = 60;
 
@@ -35,10 +28,12 @@ export async function generateStaticParams() {
 /**
  * Gera metadados dinâmicos com base no slug + categoria.
  */
-export async function generateMetadata(context: {
-  params: { slug: string; categorySlug: string };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; categorySlug: string }>;
 }): Promise<Metadata> {
-  const { slug, categorySlug } = context.params;
+  const { slug, categorySlug } = await params;
 
   const post = await getPostByCategoryAndSlug(categorySlug, slug);
 
@@ -69,14 +64,19 @@ export async function generateMetadata(context: {
 /**
  * Página individual do post por categoria + slug
  */
-export default async function SinglePostPage({ params }: PageProps) {
+export default async function SinglePostPage({
+  params,
+}: {
+  params: Promise<{ slug: string; categorySlug: string }>;
+}) {
   const { slug, categorySlug } = await params;
+
   const post: PostDetail | null = await getPostByCategoryAndSlug(
     categorySlug,
     slug
   );
 
-  if (!post) notFound();
+  if (!post) return notFound();
 
   const { title, content, tags, meta, thumbnail, createdAt } = post;
 

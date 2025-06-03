@@ -1,4 +1,5 @@
 // app/api/posts/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { firestore, auth } from "@/firebase/server";
@@ -6,33 +7,34 @@ import { isThumbnail, Post } from "@/app/models/Post";
 import { validateSchema, postValidationSchema } from "@/lib/validationSchema";
 import { deleteFromCloudinary } from "@/lib/cloudinary.server";
 
-// ---------- utilidades ----------
 function duplicateSlugQuery(slug: string, cat: string, excludeId: string) {
   return firestore
     .collection("posts")
     .where("slug", "==", slug)
     .where("categorySlug", "==", cat)
-    .where("__name__", "!=", excludeId) // exclui o próprio doc
+    .where("__name__", "!=", excludeId)
     .limit(1)
     .get();
 }
 
-// ---------- GET /api/posts/:id ----------
+// ---------- GET ----------
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
+
   try {
-    const docSnap = await firestore.doc(`posts/${params.id}`).get();
-    if (!docSnap.exists)
+    const docSnap = await firestore.doc(`posts/${id}`).get();
+    if (!docSnap.exists) {
       return NextResponse.json(
         { error: "Post não encontrado." },
         { status: 404 }
       );
+    }
 
     const data = docSnap.data() as Post;
     return NextResponse.json({
-      // devolva só o que você realmente precisa no front:
       thumbnail: data.thumbnail?.url ?? null,
       images: (data.images || []).map((i) => ({ path: i.path, url: i.url })),
     });
@@ -45,16 +47,14 @@ export async function GET(
   }
 }
 
-// ---------- PUT /api/posts/:id ----------
-
+// ---------- PUT ----------
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id: postId } = await params;
+  const { id: postId } = await context.params;
 
   try {
-    /* ---------- corpo da requisição ---------- */
     const body = await req.json();
     const {
       title,
@@ -68,7 +68,6 @@ export async function PUT(
       categoryId,
     } = body;
 
-    /* ---------- documento atual ---------- */
     const docRef = firestore.doc(`posts/${postId}`);
     const snap = await docRef.get();
     if (!snap.exists) {
@@ -79,7 +78,6 @@ export async function PUT(
     }
     const existing = snap.data() as Post;
 
-    /* ---------- permissão ---------- */
     const existingAuthorId = (
       existing.author as FirebaseFirestore.DocumentReference
     ).id;
@@ -90,7 +88,6 @@ export async function PUT(
       );
     }
 
-    /* ---------- tags nunca undefined ---------- */
     const rawTags = body.tagsArray ?? body.tags;
     const parsedTags: string[] = Array.isArray(rawTags)
       ? rawTags
@@ -100,10 +97,8 @@ export async function PUT(
           .map((t) => t.trim())
           .filter(Boolean)
       : [];
-
     const finalTags = parsedTags.length > 0 ? parsedTags : existing.tags ?? [];
 
-    /* ---------- unicidade slug + categoria ---------- */
     const targetSlug = newSlug || existing.slug;
     const targetCat = newCatSlug || existing.categorySlug;
     const dup = await duplicateSlugQuery(targetSlug, targetCat, postId);
@@ -114,24 +109,18 @@ export async function PUT(
       );
     }
 
-    /* ---------- categoria → referência ---------- */
     const categoryRef = categoryId
       ? firestore.doc(`categories/${categoryId}`)
       : (existing.category as FirebaseFirestore.DocumentReference | null);
 
-    /* ---------- thumbnail ---------- */
     let thumbToSave = existing.thumbnail;
     if (thumbnail && isThumbnail(thumbnail)) {
       if (existing.thumbnail?.public_id) {
         await deleteFromCloudinary(existing.thumbnail.public_id);
       }
-      thumbToSave = {
-        url: thumbnail.url,
-        public_id: thumbnail.public_id,
-      };
+      thumbToSave = { url: thumbnail.url, public_id: thumbnail.public_id };
     }
 
-    /* ---------- objeto de update ---------- */
     const update: Partial<Post> = {
       title,
       content,
@@ -145,16 +134,11 @@ export async function PUT(
       updatedAt: Timestamp.now(),
     };
 
-    /* ---------- validação ---------- */
-    const err = validateSchema(postValidationSchema, {
-      ...update,
-      categoryId,
-    });
+    const err = validateSchema(postValidationSchema, { ...update, categoryId });
     if (err) {
       return NextResponse.json({ error: true, message: err }, { status: 400 });
     }
 
-    /* ---------- grava ---------- */
     await docRef.update(update);
 
     return NextResponse.json(
@@ -168,39 +152,42 @@ export async function PUT(
   }
 }
 
-// ---------- DELETE /api/posts/:id ----------
+// ---------- DELETE ----------
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const postId = params.id;
+  const { id: postId } = await context.params;
 
   try {
-    // 1. autenticação
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer "))
+    if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const token = authHeader.split("Bearer ")[1];
     const decoded = await auth.verifyIdToken(token);
-    if (!decoded)
+    if (!decoded) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // 2. carrega doc
     const docRef = firestore.doc(`posts/${postId}`);
     const docSnap = await docRef.get();
-    if (!docSnap.exists)
+    if (!docSnap.exists) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
 
     const post = docSnap.data() as Post;
-    if ((post.author as FirebaseFirestore.DocumentReference).id !== decoded.uid)
+    if (
+      (post.author as FirebaseFirestore.DocumentReference).id !== decoded.uid
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-    // 3. remove thumbnail no Cloudinary
-    if (post.thumbnail?.public_id)
+    if (post.thumbnail?.public_id) {
       await deleteFromCloudinary(post.thumbnail.public_id);
+    }
 
-    // 4. deleta doc
     await docRef.delete();
 
     return NextResponse.json(
