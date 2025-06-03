@@ -6,13 +6,6 @@ import { isThumbnail, Post } from "@/app/models/Post";
 import { validateSchema, postValidationSchema } from "@/lib/validationSchema";
 import { deleteFromCloudinary } from "@/lib/cloudinary.server";
 
-// ---------- tipos de resposta ----------
-interface APIResponse {
-  success?: boolean;
-  error?: boolean;
-  message?: string;
-}
-
 // ---------- utilidades ----------
 function duplicateSlugQuery(slug: string, cat: string, excludeId: string) {
   return firestore
@@ -67,7 +60,6 @@ export async function PUT(
       title,
       content,
       meta,
-      tagsArray,
       slug: newSlug,
       thumbnail,
       authorId,
@@ -169,12 +161,10 @@ export async function PUT(
       { success: true, message: "Post atualizado com sucesso." },
       { status: 200 }
     );
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Falha ao atualizar.";
     console.error("PUT post", e);
-    return NextResponse.json(
-      { error: true, message: e.message || "Falha ao atualizar." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: true, message }, { status: 500 });
   }
 }
 

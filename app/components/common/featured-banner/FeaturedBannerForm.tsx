@@ -187,13 +187,22 @@ const FeaturedBannerForm: React.FC<Props> = ({
       if (onSubmit) {
         await onSubmit();
       }
-    } catch (error: any) {
-      console.error("Erro ao processar o banner:", error);
-      toast({
-        title: "Erro!",
-        description: error?.message || "Ocorreu um erro ao processar o banner.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Erro ao processar o banner:", error.message);
+        toast({
+          title: "Erro!",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.error("Erro desconhecido ao processar o banner:", error);
+        toast({
+          title: "Erro!",
+          description: "Ocorreu um erro inesperado ao processar o banner.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setUploading(false);
     }

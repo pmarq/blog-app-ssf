@@ -28,8 +28,12 @@ export default function VerifyEmailPage() {
         setTimeout(() => {
           router.push("/login");
         }, 3000);
-      } catch (error: any) {
-        setMessage("Failed to verify email: " + (error.message || ""));
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setMessage("Failed to verify email: " + error.message);
+        } else {
+          setMessage("Failed to verify email: An unknown error occurred.");
+        }
       }
     };
 

@@ -19,7 +19,8 @@ export const registerUser = async (data: {
   }
 
   try {
-    const userRecord = await auth.createUser({
+    // Cria o usuário (sem armazenar o retorno em uma variável não usada)
+    await auth.createUser({
       email: data.email,
       password: data.password,
       displayName: data.name,
@@ -43,11 +44,12 @@ export const registerUser = async (data: {
       message:
         "User registered successfully. Check your email to verify your account.",
     };
-  } catch (e: any) {
-    console.error("Error during registration:", e.message);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Could not register user";
+    console.error("Error during registration:", message);
     return {
       error: true,
-      message: e.message || "Could not register user",
+      message,
     };
   }
 };

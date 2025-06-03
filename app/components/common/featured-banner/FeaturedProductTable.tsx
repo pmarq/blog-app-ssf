@@ -53,13 +53,22 @@ const FeaturedBannerTable: React.FC<Props> = ({ banners }) => {
       } else {
         throw new Error(result.message || "Erro ao deletar o banner.");
       }
-    } catch (error: any) {
-      console.error("Erro ao deletar banner:", error);
-      toast({
-        title: "Erro!",
-        description: error?.message || "Ocorreu um erro ao deletar o banner.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Erro ao deletar banner:", error.message);
+        toast({
+          title: "Erro!",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.error("Erro desconhecido ao deletar banner:", error);
+        toast({
+          title: "Erro!",
+          description: "Ocorreu um erro inesperado ao deletar o banner.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

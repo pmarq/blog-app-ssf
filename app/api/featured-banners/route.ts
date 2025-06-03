@@ -11,12 +11,11 @@ export async function GET() {
   try {
     const banners: Banner[] = await getFeaturedBanners();
     return NextResponse.json(banners, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Erro ao obter banners.";
     console.error("Erro ao obter banners:", error);
-    return NextResponse.json(
-      { error: true, message: "Erro ao obter banners." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: true, message }, { status: 500 });
   }
 }
 
@@ -55,11 +54,10 @@ export async function POST(request: Request) {
       { success: true, bannerId: response.bannerId },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Falha ao criar o banner.";
     console.error("Erro ao criar banner via API:", error);
-    return NextResponse.json(
-      { error: true, message: "Falha ao criar o banner." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: true, message }, { status: 500 });
   }
 }

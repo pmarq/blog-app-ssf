@@ -9,6 +9,7 @@ import { postValidationSchema, validateSchema } from "@/lib/validationSchema";
 import { firestore } from "@/firebase/server";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { v2 as cloudinary } from "cloudinary";
+import { PostInput } from "@/app/utils/types";
 
 // Configurar o Cloudinary no servidor
 cloudinary.config({
@@ -49,7 +50,7 @@ interface UpdatePostResponse {
  */
 
 export async function createPost(
-  postData: any,
+  postData: PostInput,
   authorId: string
 ): Promise<CreatePostResponse> {
   try {
@@ -93,7 +94,7 @@ export async function createPost(
     ) {
       // Thumbnail já enviado como objeto com url e public_id
       thumbnailUrl = postData.thumbnail.url;
-      thumbnailPublicId = postData.thumbnail.public_id;
+      thumbnailPublicId = postData.thumbnail.public_id || "";
       console.log(
         "Thumbnail recebido como objeto:",
         thumbnailUrl,
@@ -221,7 +222,7 @@ export async function savePostImages(
  */
 export async function updatePost(
   slug: string,
-  postData: any
+  postData: PostInput
 ): Promise<UpdatePostResponse> {
   try {
     // 1. Validação
@@ -274,7 +275,7 @@ export async function updatePost(
     }
 
     // 7. Gerenciar thumbnail
-    let updateData: Partial<Post> = {
+    const updateData: Partial<Post> = {
       title: postData.title,
       slug: postData.slug,
       meta: postData.meta,

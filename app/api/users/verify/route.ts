@@ -29,12 +29,10 @@ export async function POST(request: Request) {
       error: true,
       message: "Email is already verified.",
     });
-  } catch (e: any) {
-    console.error("Error verifying email:", e.message);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Could not verify email";
+    console.error("Error verifying email:", message);
 
-    return NextResponse.json(
-      { error: true, message: e.message || "Could not verify email" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: true, message }, { status: 400 });
   }
 }

@@ -52,9 +52,7 @@ export default function UpdatePasswordForm() {
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     const user = auth?.currentUser;
-    if (!user?.email) {
-      return;
-    }
+    if (!user?.email) return;
 
     try {
       await reauthenticateWithCredential(
@@ -62,18 +60,32 @@ export default function UpdatePasswordForm() {
         EmailAuthProvider.credential(user.email, data.currentPassword)
       );
       await updatePassword(user, data.newPassword);
+
       toast({
         title: "Password updated successfully",
         variant: "success",
       });
+
       form.reset();
-    } catch (e: any) {
-      console.log({ e });
+    } catch (e: unknown) {
+      console.error("Erro ao atualizar a senha:", e);
+
+      let message = "An error occurred";
+
+      if (
+        typeof e === "object" &&
+        e !== null &&
+        "code" in e &&
+        typeof (e as any).code === "string"
+      ) {
+        const errorCode = (e as { code: string }).code;
+        if (errorCode === "auth/invalid-credential") {
+          message = "Your current password is incorrect";
+        }
+      }
+
       toast({
-        title:
-          e.code === "auth/invalid-credential"
-            ? "Your current password is incorrect"
-            : "An error occurred",
+        title: message,
         variant: "destructive",
       });
     }

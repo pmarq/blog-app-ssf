@@ -11,7 +11,6 @@ import {
   FeaturedBannerServerSchema,
   FeaturedBannerServer,
 } from "@/lib/featuredBannerServer";
-import { validateSchema } from "@/lib/validationSchema"; // Certifique-se de que esta função existe e está correta
 import { Banner } from "@/app/models/Banners";
 
 // Tipos das respostas
@@ -146,7 +145,7 @@ export async function updateFeaturedBanner(
     const existingBanner = bannerDoc.data() as Banner;
 
     // 3. Gerenciar imagem
-    let updateData: Partial<Banner> = {
+    const updateData: Partial<Banner> = {
       title: bannerData.title,
       link: bannerData.link,
       linkTitle: bannerData.linkTitle,

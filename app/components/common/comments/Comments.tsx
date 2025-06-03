@@ -2,7 +2,7 @@
 
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import CommentCard from "./CommentCard";
 import CommentForm from "./CommentForm";
 import { useAuth } from "@/context/auth";
@@ -35,36 +35,45 @@ const Comments: FC<Props> = ({ belongsTo }) => {
   }, [belongsTo, currentUser]);
 
   // 1) Buscar comentários (GET /api/comments?postId=...)
-  const fetchComments = async (postId: string) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/comments?postId=${encodeURIComponent(postId)}`);
-      if (!res.ok) {
-        console.error("Erro na resposta da API:", await res.text());
-        return;
+  const fetchComments = useCallback(
+    async (postId: string) => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/comments?postId=${encodeURIComponent(postId)}`
+        );
+        if (!res.ok) {
+          console.error("Erro na resposta da API:", await res.text());
+          return;
+        }
+        const data = await res.json();
+        const userId = currentUser?.uid;
+
+        const updatedComments: CommentResponse[] = data.comments.map(
+          (comment: any) => ({
+            ...comment,
+            likedByOwner: userId ? comment.likedBy?.includes(userId) : false,
+            replies: comment.replies.map((reply: any) => ({
+              ...reply,
+              likedByOwner: userId ? reply.likedBy?.includes(userId) : false,
+            })),
+          })
+        );
+
+        setComments(updatedComments);
+      } catch (error) {
+        console.error("Erro ao buscar comentários:", error);
+      } finally {
+        setLoading(false);
       }
-      const data = await res.json();
+    },
+    [currentUser]
+  );
 
-      // Verifica se o usuário está logado para determinar 'likedByOwner'
-      const userId = currentUser?.uid;
-
-      const updatedComments: CommentResponse[] = data.comments.map((comment: any) => ({
-        ...comment,
-        likedByOwner: userId ? comment.likedBy?.includes(userId) : false,
-        replies: comment.replies.map((reply: any) => ({
-          ...reply,
-          likedByOwner: userId ? reply.likedBy?.includes(userId) : false,
-        })),
-      }));
-
-      setComments(updatedComments);
-    } catch (error) {
-      console.error("Erro ao buscar comentários:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  useEffect(() => {
+    if (!belongsTo) return;
+    fetchComments(belongsTo);
+  }, [belongsTo, currentUser, fetchComments]);
   // 2) Criar novo comentário (chiefComment)
   const handleNewCommentSubmit = async (content: string) => {
     if (!currentUser) return;
@@ -121,7 +130,6 @@ const Comments: FC<Props> = ({ belongsTo }) => {
 
       // (Opcional) Atualizar do servidor para garantir sincronização
       // fetchComments(belongsTo);
-
     } catch (error) {
       console.error("Erro ao criar comentário:", error);
     }
@@ -179,7 +187,9 @@ const Comments: FC<Props> = ({ belongsTo }) => {
           // Encontra o comentário principal
           return prev.map((c) => {
             if (c.id === chiefId) {
-              const newReplies = c.replies ? [...c.replies, newReply] : [newReply];
+              const newReplies = c.replies
+                ? [...c.replies, newReply]
+                : [newReply];
               return { ...c, replies: newReplies };
             }
             return c;
@@ -265,7 +275,9 @@ const Comments: FC<Props> = ({ belongsTo }) => {
         // Se reply, removemos só do array de replies
         return prev.map((c) => {
           if (c.replies?.length && c.id === comment.repliedTo) {
-            const filteredReplies = c.replies.filter((r) => r.id !== comment.id);
+            const filteredReplies = c.replies.filter(
+              (r) => r.id !== comment.id
+            );
             return { ...c, replies: filteredReplies };
           }
           return c;
@@ -313,7 +325,11 @@ const Comments: FC<Props> = ({ belongsTo }) => {
           if (c.id === comment.id) {
             const updatedLikes = c.likes + (data.action === "liked" ? 1 : -1);
             const updatedLikedByOwner = data.action === "liked" ? true : false;
-            return { ...c, likes: updatedLikes, likedByOwner: updatedLikedByOwner };
+            return {
+              ...c,
+              likes: updatedLikes,
+              likedByOwner: updatedLikedByOwner,
+            };
           }
           return c;
         })
@@ -346,7 +362,9 @@ const Comments: FC<Props> = ({ belongsTo }) => {
             comment={comment}
             showControls={currentUser?.uid === comment.owner.id}
             onReplySubmit={(content) => handleReplySubmit(content, comment.id)}
-            onUpdateSubmit={(content) => handleUpdateSubmit(content, comment.id)}
+            onUpdateSubmit={(content) =>
+              handleUpdateSubmit(content, comment.id)
+            }
             onDeleteClick={() => handleOnDeleteClick(comment)}
             onLikeClick={() => handleOnLikeClick(comment)}
           />
@@ -360,8 +378,12 @@ const Comments: FC<Props> = ({ belongsTo }) => {
                   key={reply.id}
                   comment={reply}
                   showControls={currentUser?.uid === reply.owner.id}
-                  onReplySubmit={(content) => handleReplySubmit(content, reply.id)}
-                  onUpdateSubmit={(content) => handleUpdateSubmit(content, reply.id)}
+                  onReplySubmit={(content) =>
+                    handleReplySubmit(content, reply.id)
+                  }
+                  onUpdateSubmit={(content) =>
+                    handleUpdateSubmit(content, reply.id)
+                  }
                   onDeleteClick={() => handleOnDeleteClick(reply)}
                   onLikeClick={() => handleOnLikeClick(reply)}
                 />

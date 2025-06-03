@@ -39,23 +39,34 @@ export default function DeleteAccountButton() {
           auth.currentUser,
           EmailAuthProvider.credential(auth.currentUser.email, password)
         );
-        /* await deleteUserFavourites(); */
         await deleteUser(auth.currentUser);
         await removeToken();
         toast({
           title: "Your account was deleted successfully",
           variant: "success",
         });
-      } catch (e: any) {
+      } catch (e: unknown) {
+        let message = "An error occurred";
+
+        if (
+          typeof e === "object" &&
+          e !== null &&
+          "code" in e &&
+          typeof (e as any).code === "string"
+        ) {
+          const errorCode = (e as { code: string }).code;
+          if (errorCode === "auth/invalid-credential") {
+            message = "Your current password is incorrect";
+          }
+        }
+
         toast({
-          title:
-            e.code === "auth/invalid-credential"
-              ? "Your current password is incorrect"
-              : "An error occurred",
+          title: message,
           variant: "destructive",
         });
+      } finally {
+        setIsDeleting(false);
       }
-      setIsDeleting(false);
     }
   };
 

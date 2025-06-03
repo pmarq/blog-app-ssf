@@ -1,6 +1,6 @@
 // app/lib/mappers.ts
 
-import {CommentResponse} from "@/app/utils/types";
+import { CommentResponse } from "@/app/utils/types";
 
 /**
  * Mapeia um documento de comentário do Firestore para a interface CommentResponse.
@@ -8,11 +8,16 @@ import {CommentResponse} from "@/app/utils/types";
  * @param docId ID do documento do Firestore.
  * @returns Objeto mapeado conforme a interface CommentResponse.
  */
-export function mapCommentDocument(docData: any, docId: string): CommentResponse {
+export function mapCommentDocument(
+  docData: any,
+  docId: string
+): CommentResponse {
   return {
     id: docId,
     content: docData.content || "",
-    createdAt: docData.createdAt ? docData.createdAt.toDate().toISOString() : "",
+    createdAt: docData.createdAt
+      ? docData.createdAt.toDate().toISOString()
+      : "",
     likes: docData.likes || 0,
     chiefComment: !!docData.chiefComment,
     repliedTo: docData.repliedTo || null,
@@ -22,5 +27,7 @@ export function mapCommentDocument(docData: any, docId: string): CommentResponse
       avatar: docData.owner?.avatar || "",
     },
     likedBy: docData.likedBy || [],
+    likedByOwner: docData.likedByOwner || false, // ou calcule com base em lógica
+    replies: docData.replies || [], // ou busque de forma assíncrona em outro lugar
   };
 }

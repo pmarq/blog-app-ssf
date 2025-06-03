@@ -18,11 +18,7 @@ export default async function AdminDashboard() {
     /* fetchLatestUsers(limit), */
   ]);
 
-  const {
-    posts,
-    lastVisibleId: postsLastVisibleId,
-    hasMore: postsHasMore,
-  } = postsData;
+  const { posts } = postsData;
   const { comments } = commentsData;
   /*   const { users } = usersData; */
 

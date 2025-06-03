@@ -5,16 +5,17 @@
 import React, { useState } from "react";
 import EditorComponent, { FinalPost } from "@/app/components/common/editor";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth"; // Import do contexto de autenticação
-import { useToast } from "@/hooks/use-toast"; // Import do hook de toast
-import { createPost } from "../action"; // Import apenas da função createPost
+import { useAuth } from "@/context/auth";
+import { useToast } from "@/hooks/use-toast";
+import { createPost } from "../action";
+import type { PostInput } from "@/app/utils/types";
 
 export default function CreatePost() {
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
-  const { currentUser } = useAuth(); // Obtém o usuário atual
-  const userId = currentUser?.uid; // Obtém o ID do usuário
+  const { currentUser } = useAuth();
+  const userId = currentUser?.uid;
   const { toast } = useToast();
 
   const handleOnSubmit = async (post: FinalPost) => {
@@ -27,38 +28,57 @@ export default function CreatePost() {
     setErrorMessage("");
 
     try {
-      // 1) Monta objeto base incluindo a thumbnail
-      const postData = {
-        ...post,
-        images: [], // Não vamos mandar nada do conteúdo
-        tags: post.tagsArray || [],
-        slug: post.slug || "", // Assegure-se de que o slug está presente
+      // ✅ Limpa thumbnail para ficar compatível com PostInput
+      let cleanedThumbnail: PostInput["thumbnail"];
+
+      if (
+        post.thumbnail &&
+        typeof post.thumbnail === "object" &&
+        "url" in post.thumbnail
+      ) {
+        cleanedThumbnail = {
+          url: post.thumbnail.url,
+          public_id: post.thumbnail.public_id,
+        };
+      } else if (post.thumbnail instanceof File) {
+        cleanedThumbnail = post.thumbnail;
+      } else {
+        cleanedThumbnail = undefined; // ignora string/null
+      }
+
+      const postData: PostInput = {
+        title: post.title,
+        content: post.content,
+        slug: post.slug || "",
         meta: post.meta || "",
-        authorId: userId, // Passa o authorId para a ação server
-        thumbnail: post.thumbnail, // Inclui o File da thumbnail (já foi upload no Editor)
+        tags: post.tagsArray || [],
+        categoryId: post.categoryId || "",
+        thumbnail: cleanedThumbnail,
+        authorId: userId,
       };
 
-      // 2) Cria o post no Firestore e gerencia o upload da thumbnail no servidor
       const response = await createPost(postData, userId);
       if (response.error || !response.postId) {
         throw new Error(response.message || "Falha ao criar o post.");
       }
 
-      // 3) Sucesso
       toast({
         title: "Sucesso!",
         description: "Post criado com sucesso!",
         variant: "default",
       });
+
       router.push("/dashboard/posts");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Ocorreu um erro ao criar o post.";
       console.error("Erro ao criar o post:", error);
-      setErrorMessage(
-        error.message || "Ocorreu um erro ao criar o post."
-      );
+      setErrorMessage(message);
       toast({
         title: "Erro!",
-        description: error.message || "Ocorreu um erro ao criar o post.",
+        description: message,
         variant: "destructive",
       });
     } finally {

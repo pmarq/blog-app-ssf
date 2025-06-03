@@ -22,15 +22,13 @@ export async function GET(
       );
     }
     return NextResponse.json(banner, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Erro ao obter o banner.";
     console.error("Erro ao obter banner:", error);
-    return NextResponse.json(
-      { error: true, message: "Erro ao obter o banner." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: true, message }, { status: 500 });
   }
 }
-
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
@@ -68,12 +66,11 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Falha ao atualizar o banner.";
     console.error("Erro ao atualizar banner via API:", error);
-    return NextResponse.json(
-      { error: true, message: "Falha ao atualizar o banner." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: true, message }, { status: 500 });
   }
 }
 
@@ -94,11 +91,10 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Falha ao deletar o banner.";
     console.error("Erro ao deletar banner via API:", error);
-    return NextResponse.json(
-      { error: true, message: "Falha ao deletar o banner." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: true, message }, { status: 500 });
   }
 }

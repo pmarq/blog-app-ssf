@@ -37,7 +37,9 @@ const GalleryModal: FC<Props> = ({
     onClose && onClose();
   };
 
-  const handleOnImageChange: ChangeEventHandler<HTMLInputElement> = async ({ target }) => {
+  const handleOnImageChange: ChangeEventHandler<HTMLInputElement> = async ({
+    target,
+  }) => {
     const { files } = target;
     if (!files || !files[0]) return;
 
@@ -59,14 +61,19 @@ const GalleryModal: FC<Props> = ({
       const folder = `gallery/${userId}`;
 
       // Faz upload utilizando a função utilitária
-      const imageUrl = await uploadToCloudinary(file, folder);
+      const uploadResult = await uploadToCloudinary(file, folder);
 
-      console.log("Imagem enviada com sucesso:", imageUrl);
+      console.log("Imagem enviada com sucesso:", uploadResult);
 
       // Atualiza a galeria com a nova imagem
-      onFileSelect(imageUrl);
-    } catch (error: any) {
-      console.error("Erro ao subir arquivo:", error);
+      onFileSelect(uploadResult.secure_url);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Erro ao subir arquivo:", error.message);
+      } else {
+        console.error("Erro desconhecido ao subir arquivo:", error);
+      }
+
       alert("Falha ao fazer upload da imagem. Por favor, tente novamente.");
     }
   };

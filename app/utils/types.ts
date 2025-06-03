@@ -14,6 +14,17 @@ export interface PostDetail {
   createdAt: string;
 }
 
+export interface PostInput {
+  title: string;
+  slug: string;
+  meta: string;
+  content: string;
+  tags?: string[] | string;
+  categoryId?: string;
+  thumbnail?: Thumbnail | File | { url: string; public_id?: string };
+  authorId?: string;
+}
+
 export interface IncomingPost {
   title: string;
   content: string;

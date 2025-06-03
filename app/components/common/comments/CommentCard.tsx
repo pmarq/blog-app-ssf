@@ -51,16 +51,13 @@ const CommentCard: FC<Props> = ({
 
   const handleCommentSubmit = (commentContent: string) => {
     if (initialState) {
-      // Update the comment
       onUpdateSubmit && onUpdateSubmit(commentContent);
     } else {
-      // Reply to the comment
       onReplySubmit && onReplySubmit(commentContent);
     }
     hideReplyForm();
   };
 
-  // Function to safely format the date
   const formatDate = (dateString: string | Date): string => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
@@ -85,10 +82,8 @@ const CommentCard: FC<Props> = ({
         <div className="mt-1 text-primary-dark dark:text-primary">
           {parse(content)}
         </div>
-
         <div className="flex space-x-4 mt-2">
           <LikeHeart
-            /* liked={likedByOwner} */
             label={`${likes} ${likes === 1 ? "like" : "likes"}`}
             onClick={onLikeClick}
           />

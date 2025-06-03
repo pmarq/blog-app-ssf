@@ -5,7 +5,7 @@ export const validateUrl = (url: string) => {
 
   try {
     finalUrl = new URL(url);
-  } catch (error) {
+  } catch {
     finalUrl = new URL("http://" + url);
   }
 

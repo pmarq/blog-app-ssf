@@ -102,13 +102,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setCurrentUser(user);
-    } catch (error: any) {
-      console.error(
-        "Erro ao logar com email e senha:",
-        error.code,
-        error.message
-      );
-      throw new Error(error.message || "Erro ao realizar login.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Erro ao logar com email e senha:", error.message);
+        throw new Error(error.message || "Erro ao realizar login.");
+      }
+
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        "message" in error
+      ) {
+        const firebaseError = error as { code: string; message: string };
+        console.error(
+          "Erro ao logar com email e senha:",
+          firebaseError.code,
+          firebaseError.message
+        );
+        throw new Error(firebaseError.message || "Erro ao realizar login.");
+      }
+
+      console.error("Erro desconhecido ao logar com email e senha:", error);
+      throw new Error("Erro desconhecido ao realizar login.");
     }
   };
 

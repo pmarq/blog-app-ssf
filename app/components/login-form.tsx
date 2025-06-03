@@ -11,6 +11,7 @@ import { Input } from "./ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "./ui/form";
 import { Button } from "./ui/button";
 import ContinueWithGoogleButton from "./common/continue-with-google-button";
+import { FirebaseError } from "firebase/app";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -32,18 +33,19 @@ export default function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
     try {
       await auth?.loginWithEmail(data.email, data.password);
       onSuccess?.();
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const errorMessage =
+        e instanceof FirebaseError && e.code === "auth/invalid-credential"
+          ? "Incorrect credentials"
+          : "An error occurred";
+
       toast({
         title: "Error!",
-        description:
-          e.code === "auth/invalid-credential"
-            ? "Incorrect credentials"
-            : "An error occurred",
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>

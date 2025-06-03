@@ -86,12 +86,18 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
       setPosts((prev) => [...prev, ...data.posts]);
       setHasMorePosts(data.hasMore);
       setLastVisibleId(data.lastVisibleId);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let errorMessage = "Não foi possível carregar mais posts.";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       console.error("Erro ao carregar posts:", error);
-      setHasMorePosts(false); // Indica que não há mais posts para carregar
+      setHasMorePosts(false);
       toast({
         title: "Erro ao Carregar Posts",
-        description: "Não foi possível carregar mais posts.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -148,11 +154,15 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
       });
       // Remover o post da lista local
       setPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao deletar o post:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Falha ao deletar o post.";
+
       toast({
         title: "Erro ao Deletar",
-        description: error.message || "Falha ao deletar o post.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

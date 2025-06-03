@@ -54,11 +54,15 @@ export default function RegisterForm() {
       });
 
       router.push("/login");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.";
+
       toast({
         title: "Unexpected Error",
-        description:
-          error?.message || "Something went wrong. Please try again.",
+        description: message,
         variant: "destructive",
       });
     }

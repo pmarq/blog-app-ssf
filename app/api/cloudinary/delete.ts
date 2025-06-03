@@ -1,7 +1,7 @@
 // app/api/cloudinary/delete.ts
 
-import { NextRequest, NextResponse } from 'next/server';
-import { deleteFromCloudinary } from '@/lib/cloudinary.server'; // Importação do módulo server-side
+import { NextRequest, NextResponse } from "next/server";
+import { deleteFromCloudinary } from "@/lib/cloudinary.server"; // Importação do módulo server-side
 
 /**
  * Interface para a requisição de deleção
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     if (!public_id) {
       return NextResponse.json(
-        { error: 'public_id é necessário para deletar a imagem.' },
+        { error: "public_id é necessário para deletar a imagem." },
         { status: 400 }
       );
     }
@@ -30,14 +30,15 @@ export async function POST(request: NextRequest) {
     await deleteFromCloudinary(public_id);
 
     return NextResponse.json(
-      { success: true, message: 'Imagem deletada com sucesso.' },
+      { success: true, message: "Imagem deletada com sucesso." },
       { status: 200 }
     );
-  } catch (error: any) {
-    console.error('Erro ao deletar imagem do Cloudinary:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro interno do servidor.' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Erro interno do servidor.";
+
+    console.error("Erro ao deletar imagem do Cloudinary:", error);
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

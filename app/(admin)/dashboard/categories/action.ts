@@ -76,11 +76,13 @@ export async function deleteCategory(categoryId: string): Promise<{
     revalidatePath("/dashboard/categories");
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro ao excluir categoria.";
     console.error("Erro ao excluir categoria:", error);
     return {
       success: false,
-      error: error.message || "Erro ao excluir categoria.",
+      error: errorMessage,
     };
   }
 }
