@@ -2,7 +2,13 @@
 
 "use client";
 
-import { ChangeEventHandler, useEffect, useState } from "react";
+import {
+  ChangeEventHandler,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useEditor, EditorContent, getMarkRange, Range } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -63,43 +69,49 @@ export default function Editor({
   const { toast } = useToast();
   const router = useRouter();
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      Link.configure({
-        autolink: false,
-        linkOnPaste: false,
-        openOnClick: false,
-      }),
-      Placeholder.configure({ placeholder: "Type something" }),
-      Youtube.configure({
-        width: 840,
-        height: 472.5,
-        HTMLAttributes: { class: "mx-auto rounded" },
-      }),
-      TipTapImage.configure({ HTMLAttributes: { class: "mx-auto" } }),
-    ],
-    editorProps: {
-      handleClick(view, pos) {
-        const { state } = view;
-        const range = getMarkRange(
-          state.doc.resolve(pos),
-          state.schema.marks.link
-        );
-        if (range) setSelectionRange(range);
+  // 1) Memoizando TODAS as opções do useEditor:
+  const editorConfig = useMemo(() => {
+    return {
+      extensions: [
+        StarterKit,
+        Underline,
+        Link.configure({
+          autolink: false,
+          linkOnPaste: false,
+          openOnClick: false,
+        }),
+        Placeholder.configure({ placeholder: "Type something" }),
+        Youtube.configure({
+          width: 840,
+          height: 472.5,
+          HTMLAttributes: { class: "mx-auto rounded" },
+        }),
+        TipTapImage.configure({ HTMLAttributes: { class: "mx-auto" } }),
+      ],
+      editorProps: {
+        handleClick(view: any, pos: number) {
+          const { state } = view;
+          const range = getMarkRange(
+            state.doc.resolve(pos),
+            state.schema.marks.link
+          );
+          if (range) setSelectionRange(range);
+        },
+        attributes: {
+          class:
+            "prose prose-lg focus:outline-none dark:prose-invert max-w-full mx-auto h-full",
+        },
       },
-      attributes: {
-        class:
-          "prose prose-lg focus:outline-none dark:prose-invert max-w-full mx-auto h-full",
+      content: "",
+      onUpdate: () => {
+        // Se você não precisa fazer nada a cada digitação, pode deixar vazio ou remover.
       },
-    },
-    content: "",
-    onUpdate: () => {
-      // Exemplo: se quiser capturar o conteúdo a cada digitação
-    },
-    immediatelyRender: false, // Essencial para evitar problemas de SSR
-  });
+      immediatelyRender: false,
+    };
+  }, []);
+
+  // 2) Agora passo essa configuração estável para useEditor:
+  const editor = useEditor(editorConfig);
 
   // Função para obter o token de autenticação
   const getAuthToken = async (): Promise<string | null> => {
@@ -305,7 +317,7 @@ export default function Editor({
 
   // Atualiza thumbnail localmente (sem upload imediato)
   const updateThumbnail = (file: File) => {
-    setPost({ ...post, thumbnail: file });
+    setPost((prev) => ({ ...prev, thumbnail: file }));
   };
 
   // Se houve clique em link (para editar)
@@ -315,26 +327,33 @@ export default function Editor({
     }
   }, [editor, selectionRange]);
 
-  // Se vier initialValue (edição)
+  // Inicialização segura (evita loop infinito)
+  const initializedRef = useRef(false);
+
   useEffect(() => {
-    if (!initialValue) return;
-    setPost({ ...initialValue });
+    if (!initialValue || !editor || initializedRef.current) return;
+
+    setPost(initialValue);
     if (initialValue.content) {
-      editor?.commands.setContent(initialValue.content);
+      editor.commands.setContent(initialValue.content);
     }
+
     const { meta, slug, tags } = initialValue;
     setSeoInitialValue({ meta, slug, tags });
+
+    initializedRef.current = true; // Evita reexecução
   }, [initialValue, editor]);
 
+  // Buscar categorias ao montar o componente
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchCategories = async () => {
       const cats = await getCategories();
-      cats.sort((a, b) => a.title.localeCompare(b.title)); // <-- ordena por título
+      cats.sort((a, b) => a.title.localeCompare(b.title));
       setCategories(cats);
     };
-    fetch();
+    fetchCategories();
   }, []);
 
   return (

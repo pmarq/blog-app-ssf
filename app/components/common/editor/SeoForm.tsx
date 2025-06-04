@@ -36,12 +36,17 @@ const SEOForm: FC<Props> = ({
     onChange(newValues);
   };
 
+  // Só rode quando o título mudar!
   useEffect(() => {
+    if (!title) return;
     const slug = slugify(title.toLowerCase());
-    const newValues = { ...values, slug };
-    setValues(newValues);
-    onChange(newValues);
-  }, [title, onChange, values]);
+    if (slug && slug !== values.slug) {
+      const newValues = { ...values, slug };
+      setValues(newValues);
+      onChange(newValues);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
 
   useEffect(() => {
     if (initialValue) {
