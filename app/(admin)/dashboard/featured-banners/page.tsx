@@ -1,4 +1,5 @@
 // app/(admin)/dashboard/featured-banners/page.tsx
+export const dynamic = "force-dynamic";
 
 import FeaturedBannerTable from "@/app/components/common/featured-banner/FeaturedProductTable";
 import React from "react";
