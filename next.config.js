@@ -1,3 +1,5 @@
+// next.config.js (BLOG inlevor)
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // 1) prefixa todas as rotas/arquivos estáticos com /blog
