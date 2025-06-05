@@ -19,6 +19,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  /* ───── novo bloco ───── */
+  async rewrites() {
+    return [
+      {
+        source: "/blog/:path*",
+        destination: "https://blog-app-cloudinary-v3.vercel.app/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
