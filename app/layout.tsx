@@ -23,12 +23,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${poppins.className} antialiased`}>
+      <body className={`${poppins.className} antialiased bg-slate-100`}>
         {/* Envolvendo toda a aplicação com AuthProvider */}
         <AuthProvider>
           <UserNav /> {/* Usa o componente de navegação */}
           {children}
-          <Toaster/>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

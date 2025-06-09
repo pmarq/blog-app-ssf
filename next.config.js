@@ -1,12 +1,11 @@
 // next.config.js (BLOG inlevor)
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  // 1) prefixa todas as rotas/arquivos estáticos com /blog
-  basePath: "/blog",
-  trailingSlash: false, // (opcional) evita /blog/page/ → /blog/page
+const isProd = process.env.NODE_ENV === "production";
 
-  // 2) imagens remotas – mantém as mesmas regras
+const nextConfig = {
+  basePath: isProd ? "/blog" : "",
+  trailingSlash: false,
   images: {
     remotePatterns: [
       {
@@ -22,8 +21,6 @@ const nextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
     ],
   },
-
-  // 3) se você usava algo em experimental, mantenha aqui
   experimental: {
     serverActions: { bodySizeLimit: "10mb" },
   },

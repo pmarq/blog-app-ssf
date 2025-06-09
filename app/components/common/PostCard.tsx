@@ -22,6 +22,19 @@ const trimText = (text: string, trimBy: number) => {
   return text.substring(0, trimBy).trim() + "...";
 };
 
+function formatDatePtBr(date: Date) {
+  const partes = date
+    .toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    })
+    .split(" de ");
+  return `${partes[0]}-${partes[1][0].toUpperCase()}${partes[1].slice(1)}-${
+    partes[2]
+  }`;
+}
+
 const PostCard: FC<Props> = ({
   controls = false,
   post,
@@ -56,8 +69,8 @@ const PostCard: FC<Props> = ({
           <Badge variant="neutral" className="w-fit text-sm">
             {categoryTitle}
           </Badge>
-          <span className="text-sm text-secondary-dark">
-            {dateformat(new Date(createdAt), "d-mmm-yyyy")}
+          <span className="text-sm text-sky-600">
+            {formatDatePtBr(new Date(createdAt))}
           </span>
         </div>
 
@@ -66,7 +79,7 @@ const PostCard: FC<Props> = ({
           className="flex flex-col flex-1"
         >
           {/* Tags */}
-          <div className="flex items-center justify-between text-xs text-primary-dark dark:text-primary mb-2">
+          <div className="flex items-center justify-between text-xs text-sky-950 mb-2">
             <div className="flex flex-wrap items-center space-x-1">
               {tags.map((t, index) => (
                 <span key={`${t}-${index}`}>#{t}</span>
@@ -75,12 +88,10 @@ const PostCard: FC<Props> = ({
           </div>
 
           {/* Título e descrição */}
-          <h1 className="font-semibold text-primary-dark dark:text-primary mb-1">
+          <h1 className="font-semibold text-sky-950 mb-1">
             {trimText(title, 50)}
           </h1>
-          <p className="text-secondary-dark !text-[14px] mb-2">
-            {trimText(meta, 70)}
-          </p>
+          <p className="text-sky-900 !text-[14px] mb-2">{trimText(meta, 70)}</p>
         </Link>
 
         {controls && (

@@ -51,16 +51,21 @@ export default async function HomePage() {
       desc="Bem-vindo ao nosso blog onde compartilhamos as últimas novidades e insights."
     >
       {/* Banner */}
-      <div className="mb-14">
+      <div>
         <FeaturedProductsSlider banners={banners} />
       </div>
+      <div className="mb-8 text-2xl font-semibold text-sky-950 text-center">
+        Acompanhe o Mercado Imobiliário de Alto Padrão
+      </div>
       {/* Último Post Destacado */}
-      <div className="mb-8">
+      <div className="mb-2">
         <HighlightedPost post={latestPost} />
       </div>
       {/* Outros Posts */}
       <div className="p-10">
-        <h2 className="text-xl mb-4">Confira também...</h2>
+        <h2 className="text-xl text-sky-950 font-semibold mb-4">
+          Confira também...
+        </h2>
         <PostsListWrapper
           initialPosts={otherPosts}
           initialLastVisibleId={lastVisibleId}

@@ -1,29 +1,67 @@
 // components/Navbar.tsx
 
 import Link from "next/link";
-import { HomeIcon } from "lucide-react";
 import AuthButtons from "../auth-buttons";
-import SearchBar from "../SearchBar"; // Importar a SearchBar
+import NextImage from "next/image";
 
 export default function Navbar() {
   return (
-    <nav className="bg-sky-950 text-white p-5 h-24 flex items-center justify-between">
-      {/* Logo */}
-      <Link
-        href="/"
-        className="text-3xl tracking-widest flex gap-2 items-center uppercase"
-      >
-        <HomeIcon />
-        <span>BLOG-INLEVOR</span>
+    <nav className="bg-slate-100 text-white px-5 h-24 flex items-center justify-between">
+      {/* Logo (apenas logo como link para Home) */}
+      <Link href="/">
+        <NextImage
+          src="/logo.svg"
+          alt="Logo"
+          width={230}
+          height={90}
+          className="
+            w-[clamp(120px,30vw,230px)]  /* Logo menor em mobile, original em telas maiores */
+            h-auto                       /* Mantém a proporção do logo */
+          "
+        />
       </Link>
-
       {/* Barra de Busca e Botões de Autenticação */}
-      <ul className="flex gap-6 items-center">
-        {/* Barra de Busca */}
-        <li>
-          <SearchBar />
+      <ul className="flex gap-3 lg:gap-6 items-center">
+        <li className="hidden sm:block md:text-xs text-[16px]">
+          <Link
+            href="/"
+            className="uppercase tracking-widest hover:underline text-sky-950"
+          >
+            Home
+          </Link>
         </li>
-        {/* Botões de Autenticação */}
+        <li className="hidden sm:block md:text-xs text-[16px]">
+          <Link
+            href="/property-search"
+            className="uppercase tracking-widest hover:underline text-sky-950"
+          >
+            Buscar Imóveis
+          </Link>
+        </li>
+        <li className="hidden sm:block md:text-xs text-[16px]">
+          <Link
+            href="/blog"
+            className="uppercase tracking-widest hover:underline text-sky-950"
+          >
+            Blog
+          </Link>
+        </li>
+        <li className="hidden sm:block md:text-xs text-[16px]">
+          <Link
+            href="/#sobre"
+            className="uppercase tracking-widest hover:underline text-sky-950"
+          >
+            Sobre
+          </Link>
+        </li>
+        <li className="hidden sm:block md:text-xs text-[16px]">
+          <Link
+            href="/#contato"
+            className="uppercase tracking-widest hover:underline text-sky-950"
+          >
+            Contato
+          </Link>
+        </li>
         <li>
           <AuthButtons />
         </li>

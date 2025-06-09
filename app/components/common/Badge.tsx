@@ -18,7 +18,7 @@ const badgeVariants = cva(
         primary: "bg-sky-600 text-white border-transparent",
 
         // ➕ Adicionado: estilo neutro em cinza claro
-        neutral: "bg-gray-100 text-gray-700 border border-gray-300",
+        neutral: "bg-gray-100 text-sky-950 border border-gray-300",
       },
     },
     defaultVariants: {

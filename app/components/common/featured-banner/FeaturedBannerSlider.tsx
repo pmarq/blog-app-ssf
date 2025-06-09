@@ -52,25 +52,43 @@ export default function FeaturedProductsSlider({ banners }: Props) {
   if (!banners.length) return null;
 
   return (
-    <div className="h-[350px]">
+    <div
+      className="
+        w-screen
+        h-[350px]
+        relative
+        left-1/2
+        right-1/2
+        -ml-[50vw]
+        -mr-[50vw]
+        max-w-none
+        p-0
+        m-0
+        -mt-4
+      "
+      style={{
+        top: 0,
+      }}
+    >
       <Slider {...settings}>
         {banners.map(({ banner, title, link, linkTitle }, index) => (
           <div className="select-none relative" key={index}>
             {/* Container da imagem */}
-            <div className="w-full h-[360px] relative">
+            <div className="w-full h-[300px] relative">
               <Image
                 fill
                 src={banner.url} // <-- Use banner.url, que é de fato uma string
                 alt={title}
                 style={{ objectFit: "cover" }}
-                className="rounded-2xl"
               />
             </div>
 
             {/* Conteúdo sobreposto */}
-            <div className="absolute inset-0 p-5">
+            <div className="absolute inset-0 px-10">
               <div className="w-1/2 h-full flex flex-col items-start justify-center">
-                <h1 className="text-3xl font-semibold mb-2">{title}</h1>
+                <h1 className="text-2xl text-sky-950 font-semibold mb-2">
+                  {title}
+                </h1>
                 <Button onClick={() => router.push(link)}>{linkTitle}</Button>
               </div>
             </div>
