@@ -1,5 +1,3 @@
-// app/components/common/featured-banner/FeaturedBannerSlider.tsx
-
 "use client";
 
 import React from "react";
@@ -51,11 +49,77 @@ export default function FeaturedProductsSlider({ banners }: Props) {
   // Se não houver banners, não renderiza nada
   if (!banners.length) return null;
 
+  // Se houver apenas 1 banner, renderize sem Slider
+  if (banners.length === 1) {
+    const { banner, title, link, linkTitle } = banners[0];
+    return (
+      <div
+        className="
+          w-screen
+          h-[180px]         /* altura padrão no mobile */
+          sm:h-[220px]      /* a partir de 640px */
+          md:h-[260px]      /* a partir de 768px */
+          lg:h-[300px]      /* a partir de 1024px */
+          xl:h-[350px]      /* a partir de 1280px */
+          relative
+          left-1/2
+          right-1/2
+          -ml-[50vw]
+          -mr-[50vw]
+          max-w-none
+          p-0
+          m-0
+          -mt-4
+        "
+        style={{
+          top: 0,
+        }}
+      >
+        {/* Container da imagem */}
+        <div
+          className="
+            w-full
+            h-[180px]
+            sm:h-[220px]
+            md:h-[260px]
+            lg:h-[300px]
+            xl:h-[350px]
+            relative
+          "
+        >
+          <Image
+            fill
+            src={banner.url} // <-- Use banner.url, que é de fato uma string
+            alt={title}
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+
+        {/* Conteúdo sobreposto */}
+        <div className="absolute inset-0 px-10">
+          <div className="w-1/2 h-full flex flex-col items-start justify-center">
+            <h1 className="text-base sm:text-xl md:text-2xl text-white font-semibold mb-2 leading-none sm:leading-tight md:leading-normal">
+              {title}
+            </h1>
+            <Button className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-sm md:h-12 md:text-base">
+              {linkTitle}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Se houver dois ou mais banners, use o Slider normalmente
   return (
     <div
       className="
         w-screen
-        h-[350px]
+        h-[180px]         /* altura padrão no mobile */
+        sm:h-[220px]      /* a partir de 640px */
+        md:h-[260px]      /* a partir de 768px */
+        lg:h-[300px]      /* a partir de 1024px */
+        xl:h-[350px]      /* a partir de 1280px */
         relative
         left-1/2
         right-1/2
@@ -74,7 +138,17 @@ export default function FeaturedProductsSlider({ banners }: Props) {
         {banners.map(({ banner, title, link, linkTitle }, index) => (
           <div className="select-none relative" key={index}>
             {/* Container da imagem */}
-            <div className="w-full h-[300px] relative">
+            <div
+              className="
+                w-full
+                h-[180px]
+                sm:h-[220px]
+                md:h-[260px]
+                lg:h-[300px]
+                xl:h-[350px]
+                relative
+              "
+            >
               <Image
                 fill
                 src={banner.url} // <-- Use banner.url, que é de fato uma string
@@ -85,11 +159,13 @@ export default function FeaturedProductsSlider({ banners }: Props) {
 
             {/* Conteúdo sobreposto */}
             <div className="absolute inset-0 px-10">
-              <div className="w-1/2 h-full flex flex-col items-start justify-center">
-                <h1 className="text-2xl text-sky-950 font-semibold mb-2">
+              <div className="w-1/3 h-full p-0 md:p-12  flex flex-col items-start justify-center">
+                <h1 className="text-base sm:text-xl md:text-3xl text-white font-semibold mb-4 leading-tight sm:leading-tight md:leading-normal">
                   {title}
                 </h1>
-                <Button onClick={() => router.push(link)}>{linkTitle}</Button>
+                <Button className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs">
+                  {linkTitle}
+                </Button>
               </div>
             </div>
           </div>
