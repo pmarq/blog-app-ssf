@@ -26,7 +26,7 @@ const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
         className="flex flex-col md:flex-row no-underline text-inherit"
       >
         {/* Thumbnail */}
-        <div className="md:w-3/4 relative h-[350px] overflow-hidden">
+        <div className="md:w-3/4 relative h-[230px] sm:h-[2500px] md:h-[350px] overflow-hidden">
           {!thumbnail || !thumbnail.url ? (
             <div className="w-full h-full flex items-center justify-center text-secondary-dark opacity-50 font-semibold rounded-2xl">
               No image
@@ -45,10 +45,10 @@ const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
         </div>
 
         {/* Informações do Post */}
-        <div className="p-12 mt-6 md:mt-0 flex flex-col justify-between md:w-3/4">
+        <div className="p-4 mt-6 md:mt-0 flex flex-col justify-between md:w-3/4">
           <div>
             <div className="flex justify-between items-center mb-4">
-              <span className="text-base text-sky-800">
+              <span className="text-xs md:text-base text-sky-800">
                 {new Date(createdAt).toLocaleDateString("pt-BR", {
                   day: "2-digit",
                   month: "short",
@@ -59,7 +59,7 @@ const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
                 {tags.map((tag, index) => (
                   <span
                     key={`${tag}-${index}`}
-                    className="text-base text-blue-500"
+                    className="text-xs md:text-base text-blue-500"
                   >
                     #{tag}
                   </span>
