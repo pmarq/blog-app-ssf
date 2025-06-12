@@ -101,7 +101,10 @@ export default function FeaturedProductsSlider({ banners }: Props) {
             <h1 className="text-base sm:text-xl md:text-2xl text-white font-semibold mb-2 leading-none sm:leading-tight md:leading-normal">
               {title}
             </h1>
-            <Button className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-sm md:h-12 md:text-base">
+            <Button
+              className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs"
+              onClick={() => router.push(link)}
+            >
               {linkTitle}
             </Button>
           </div>
@@ -163,7 +166,10 @@ export default function FeaturedProductsSlider({ banners }: Props) {
                 <h1 className="text-base sm:text-xl md:text-3xl text-white font-semibold mb-4 leading-tight sm:leading-tight md:leading-normal">
                   {title}
                 </h1>
-                <Button className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs">
+                <Button
+                  className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs"
+                  onClick={() => router.push(link)}
+                >
                   {linkTitle}
                 </Button>
               </div>
