@@ -122,21 +122,35 @@ const FeaturedBannerForm: React.FC<Props> = ({
       setUploading(true);
       let imageUrl = initialValue?.imageUrl || "";
       let publicId = initialValue?.publicId || "";
+      let isNewImage = false;
 
+      // Se houve upload de nova imagem
       if (data.file) {
-        const folder = "featured-banners"; // Ajuste conforme a necessidade do projeto
+        const folder = "featured-banners"; // Ajuste conforme sua necessidade
         const uploadResult = await uploadToCloudinary(data.file, folder);
         imageUrl = uploadResult.secure_url;
         publicId = uploadResult.public_id;
+        isNewImage = true;
       }
 
-      const payload = {
+      // Monta payload base
+      const payload: Record<string, any> = {
         title: data.title,
         link: data.link,
         linkTitle: data.linkTitle,
         imageUrl,
         publicId,
       };
+
+      // Só envia oldPublicId se for edição, trocou a imagem e o id mudou
+      if (
+        isForUpdate &&
+        isNewImage &&
+        initialValue?.publicId &&
+        publicId !== initialValue.publicId
+      ) {
+        payload.oldPublicId = initialValue.publicId;
+      }
 
       let response;
       if (isForUpdate && initialValue) {
@@ -177,7 +191,6 @@ const FeaturedBannerForm: React.FC<Props> = ({
         linkTitle: "",
       });
       resetField("file");
-
       setPreview("");
       router.refresh();
       router.push("/dashboard/featured-banners");

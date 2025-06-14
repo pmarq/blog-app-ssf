@@ -98,11 +98,11 @@ export default function FeaturedProductsSlider({ banners }: Props) {
         {/* Conteúdo sobreposto */}
         <div className="absolute inset-0 px-10">
           <div className="w-1/2 h-full flex flex-col items-start justify-center">
-            <h1 className="text-base sm:text-xl md:text-2xl text-white font-semibold mb-2 leading-none sm:leading-tight md:leading-normal">
+            <h1 className="text-sm sm:text-xl md:text-2xl text-white font-semibold mb-2 leading-none sm:leading-tight md:leading-normal">
               {title}
             </h1>
             <Button
-              className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs"
+              className="h-3 px-2 py-1 text-[8px] sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs"
               onClick={() => router.push(link)}
             >
               {linkTitle}
@@ -163,11 +163,11 @@ export default function FeaturedProductsSlider({ banners }: Props) {
             {/* Conteúdo sobreposto */}
             <div className="absolute inset-0 px-10">
               <div className="w-1/3 h-full p-0 md:p-12  flex flex-col items-start justify-center">
-                <h1 className="text-base sm:text-xl md:text-3xl text-white font-semibold mb-4 leading-tight sm:leading-tight md:leading-normal">
+                <h1 className="text-sm sm:text-xl md:text-3xl text-white font-semibold mb-4 leading-tight sm:leading-tight md:leading-normal">
                   {title}
                 </h1>
                 <Button
-                  className="h-5 px-3 py-1 text-xs sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs"
+                  className="h-3 px-2 py-1 text-[8px] sm:h-6 sm:px-4 sm:text-xs md:h-6 md:text-xs"
                   onClick={() => router.push(link)}
                 >
                   {linkTitle}

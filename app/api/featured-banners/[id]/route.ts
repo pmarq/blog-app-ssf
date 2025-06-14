@@ -6,6 +6,7 @@ import {
   getFeaturedBannerById,
   updateFeaturedBanner,
 } from "@/app/(admin)/dashboard/featured-banners/action";
+import { v2 as cloudinary } from "cloudinary";
 
 export async function GET(
   request: Request,
@@ -38,13 +39,24 @@ export async function PUT(
 
   try {
     const data = await request.json();
-    const { title, link, linkTitle, imageUrl, publicId } = data;
+    const { title, link, linkTitle, imageUrl, publicId, oldPublicId } = data;
 
     if (!title || !link || !linkTitle || !imageUrl || !publicId) {
       return NextResponse.json(
         { error: true, message: "Dados do banner estão incompletos." },
         { status: 400 }
       );
+    }
+
+    // 1. Deleta imagem antiga do Cloudinary SE for diferente da nova
+    if (oldPublicId && publicId && oldPublicId !== publicId) {
+      try {
+        await cloudinary.uploader.destroy(oldPublicId);
+        console.log("Imagem antiga deletada do Cloudinary:", oldPublicId);
+      } catch (err) {
+        console.error("Erro ao deletar imagem antiga do Cloudinary:", err);
+        // Não retorna erro, só loga, segue fluxo
+      }
     }
 
     const bannerData = {
