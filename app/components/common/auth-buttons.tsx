@@ -73,14 +73,14 @@ export default function AuthButtons() {
         <div className="flex gap-2 items-center">
           <Link
             href="/login"
-            className="uppercase tracking-widest hover:underline"
+            className="uppercase tracking-widest hover:underline text-sky-950 text-xs font-poppins"
           >
             Login
           </Link>
           <div className="h-8 w-[1px] bg-white/50" />
           <Link
             href="/register"
-            className="uppercase tracking-widest hover:underline"
+            className="uppercase tracking-widest hover:underline text-sky-950 text-xs font-poppins"
           >
             Signup
           </Link>
