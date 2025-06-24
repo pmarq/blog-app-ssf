@@ -1,3 +1,4 @@
+"use client";
 import {
   Card,
   CardContent,
@@ -6,10 +7,27 @@ import {
   CardTitle,
 } from "@/app/components/ui/card";
 
-import Link from "next/link";
 import LoginForm from "./login-form";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (searchParams.get("from") === "register") {
+      toast({
+        title: "Verifique seu e-mail!",
+        description:
+          "Enviamos um e-mail de verificação. Clique no link para ativar sua conta antes de fazer login.",
+        variant: "success", // ou "info", "default", depende do seu design
+      });
+    }
+  }, [searchParams, toast]);
+
   return (
     <Card>
       <CardHeader>

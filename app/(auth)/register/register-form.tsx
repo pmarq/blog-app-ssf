@@ -45,15 +45,15 @@ export default function RegisterForm() {
         });
         return;
       }
-
       toast({
-        title: "Success",
+        title: "Conta criada!",
         description:
-          "Your account was created successfully! Please check your email to verify your account.",
+          "Enviamos um e-mail de verificação. Clique no link do e-mail para ativar sua conta. Depois faça login.",
         variant: "success",
       });
 
-      router.push("/login");
+      // Redireciona para login com um query param
+      router.push("/login?from=register");
     } catch (error: unknown) {
       const message =
         error instanceof Error
