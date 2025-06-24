@@ -74,8 +74,9 @@ export const registerUser = async (data: {
       actionCodeSettings
     );
 
-    // 4. Envia email de verificação
-    await sendVerificationEmail(data.email, verificationLink);
+    const verificationLinkPt = verificationLink + "&lang=pt";
+
+    await sendVerificationEmail(data.email, verificationLinkPt);
 
     return {
       error: false,
