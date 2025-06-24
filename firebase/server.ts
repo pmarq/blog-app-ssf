@@ -113,3 +113,5 @@ export const getTotalPages = async (
   const totalPages = Math.ceil(total / pageSize);
   return totalPages;
 };
+
+export { admin };

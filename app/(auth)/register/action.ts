@@ -83,9 +83,9 @@ export const registerUser = async (data: {
     };
   } catch (e: unknown) {
     // Acesso seguro às propriedades do erro (sem perder type safety)
-    let code =
+    const code =
       typeof e === "object" && e && "code" in e ? (e as any).code : undefined;
-    let message =
+    const message =
       (code && firebaseErrorMessages[code]) ||
       (typeof e === "object" && e && "message" in e
         ? (e as any).message

@@ -4,7 +4,6 @@
 
 import Image from "next/image";
 import { FC } from "react";
-import dateformat from "dateformat";
 import Link from "next/link";
 import { PostDetail } from "@/app/utils/types";
 import { Loader2 } from "lucide-react";
