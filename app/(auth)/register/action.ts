@@ -64,17 +64,20 @@ export const registerUser = async (data: {
     ]);
 
     // 3. Gera link de verificação de email
-    const actionCodeSettings = {
-      url: `${process.env.APP_URL}/verify-email`,
-      handleCodeInApp: true,
-    };
-
     const verificationLink = await auth.generateEmailVerificationLink(
       data.email,
-      actionCodeSettings
+      {
+        url: `${process.env.APP_URL}/blog/login`, // Redireciona para login após verificar
+        handleCodeInApp: true,
+        // Passa o idioma desejado
+        dynamicLinkDomain: process.env.FIREBASE_DYNAMIC_LINK_DOMAIN, // Se usar Dynamic Links
+      }
     );
 
-    const verificationLinkPt = verificationLink + "&lang=pt";
+    // Adiciona o parâmetro de idioma na própria URL (algumas versões respeitam)
+    const verificationLinkPt = verificationLink.includes("?")
+      ? `${verificationLink}&lang=pt`
+      : `${verificationLink}?lang=pt`;
 
     await sendVerificationEmail(data.email, verificationLinkPt);
 
