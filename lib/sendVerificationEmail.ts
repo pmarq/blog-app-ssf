@@ -31,7 +31,7 @@ export async function sendVerificationEmail(email: string, link: string) {
           .btn {
             display: inline-block;
             padding: 12px 36px;
-            background: #1e40af;
+            background: #93c5fd;
             color: #fff;
             border-radius: 7px;
             font-weight: bold;
@@ -40,7 +40,7 @@ export async function sendVerificationEmail(email: string, link: string) {
             margin: 28px 0 16px 0;
             transition: background .2s;
           }
-          .btn:hover { background: #2563eb; }
+          .btn:hover { background: #bfdbfe; }
           .footer {
             font-size: 13px;
             color: #999;
