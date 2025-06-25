@@ -70,7 +70,7 @@ export default function RegisterForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <fieldset
           disabled={form.formState.isSubmitting}
           className="flex flex-col gap-4"
@@ -78,72 +78,74 @@ export default function RegisterForm() {
           <FormField
             control={form.control}
             name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Your Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Enter your name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Seu nome</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Seu nome" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
           <FormField
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Enter your email" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>E-mail</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="E-mail" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
           <FormField
             control={form.control}
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Enter your password"
-                    type="password"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Senha" type="password" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
           <FormField
             control={form.control}
             name="passwordConfirm"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Confirm your password"
-                    type="password"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Confirmar senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Confirmar senha"
+                      type="password"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
-          <Button type="submit" variant="secondary" className="w-full">
-            Register
+          <Button variant="secondary" type="submit">
+            Cadastrar
           </Button>
+          <div className="text-center">ou</div>
         </fieldset>
       </form>
-      <div className="text-center mt-4">
-        <p className="text-sm">or</p>
-        <ContinueWithGoogleButton />
-      </div>
+      <ContinueWithGoogleButton />
     </Form>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth";
+import { FcGoogle } from "react-icons/fc"; // Ícone do Google
 import { Button } from "../ui/button";
 
 export default function ContinueWithGoogleButton() {
@@ -10,16 +11,22 @@ export default function ContinueWithGoogleButton() {
 
   return (
     <Button
-      variant="outline"
+      type="button"
+      className="
+        w-full flex items-center gap-2 font-semibold shadow 
+        bg-[#4285F4] text-white 
+        hover:bg-[#6ea2f7] 
+        transition-colors
+      "
       onClick={async () => {
         try {
           await auth?.loginWithGoogle();
           router.refresh();
-        } catch {}
+        } catch (e) {}
       }}
-      className="w-full"
     >
-      Continue with Google
+      <FcGoogle size={22} />
+      Continuar com Google
     </Button>
   );
 }

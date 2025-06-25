@@ -60,7 +60,7 @@ export default function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
               return (
                 <FormItem>
                   <FormControl>
-                    <Input {...field} placeholder="Email" />
+                    <Input {...field} placeholder="E-mail" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -74,7 +74,7 @@ export default function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
               return (
                 <FormItem>
                   <FormControl>
-                    <Input {...field} placeholder="Password" type="password" />
+                    <Input {...field} placeholder="Senha" type="password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -82,15 +82,15 @@ export default function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
             }}
           />
           <Button type="submit" variant="secondary">
-            Login
+            Entrar
           </Button>
           <div>
-            Forgotten your password?
+            Esqueceu sua senha?
             <Link href="/forgot-password" className="pl-2 underline">
-              Reset it here.
+              Redefina aqui.
             </Link>
           </div>
-          <div className="text-center pb-5">or</div>
+          <div className="text-center pb-5">ou</div>
         </fieldset>
       </form>
       <ContinueWithGoogleButton />
