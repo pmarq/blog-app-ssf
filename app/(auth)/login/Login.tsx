@@ -18,15 +18,14 @@ export default function Login() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Exemplo: mostra mensagem após registro bem-sucedido
-    if (searchParams.get("verify") === "1") {
+    if (searchParams.get("from") === "register") {
       toast({
-        title: "Conta verificada!",
-        description: "Seu e-mail foi verificado. Agora é só fazer login.",
+        title: "Verifique seu e-mail!",
+        description:
+          "Enviamos um e-mail de verificação. Clique no link para ativar sua conta antes de fazer login.",
         variant: "success",
       });
     }
-    // Pode adicionar outros tratamentos, como reset de senha, etc.
   }, [searchParams, toast]);
 
   return (
