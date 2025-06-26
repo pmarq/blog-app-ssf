@@ -40,7 +40,7 @@ export default function Navbar() {
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
           <Link
-            href="www.inlevor.com.br"
+            href="https://inlevor.com.br"
             className="uppercase tracking-widest hover:underline text-sky-950"
           >
             Inlevor
@@ -48,7 +48,7 @@ export default function Navbar() {
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
           <Link
-            href="www.inlevor.com.br/sobre"
+            href="https://inlevor.com.br/#sobre"
             className="uppercase tracking-widest hover:underline text-sky-950"
           >
             Sobre
@@ -56,7 +56,7 @@ export default function Navbar() {
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
           <Link
-            href="/#contato"
+            href="https://inlevor.com.br/#contato"
             className="uppercase tracking-widest hover:underline text-sky-950"
           >
             Contato
