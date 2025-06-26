@@ -47,21 +47,26 @@ export default function Navbar() {
           </Link>
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
-          <Link
+          <a
             href="https://inlevor.com.br/#sobre"
             className="uppercase tracking-widest hover:underline text-sky-950"
+            target="_blank" // se quiser abrir em nova aba, senão pode tirar
+            rel="noopener noreferrer"
           >
             Sobre
-          </Link>
+          </a>
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
-          <Link
+          <a
             href="https://inlevor.com.br/#contato"
             className="uppercase tracking-widest hover:underline text-sky-950"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Contato
-          </Link>
+          </a>
         </li>
+
         <li>
           <AuthButtons />
         </li>
