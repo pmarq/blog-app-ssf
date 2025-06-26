@@ -32,7 +32,7 @@ export default function Navbar() {
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
           <Link
-            href="/property-search"
+            href="https://inlevor.com.br/property-search"
             className="uppercase tracking-widest hover:underline text-sky-950"
           >
             Buscar Imóveis
@@ -43,12 +43,12 @@ export default function Navbar() {
             href="/blog"
             className="uppercase tracking-widest hover:underline text-sky-950"
           >
-            Blog
+            Inlevor
           </Link>
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
           <Link
-            href="/#sobre"
+            href="www.inlevor.com.br"
             className="uppercase tracking-widest hover:underline text-sky-950"
           >
             Sobre
