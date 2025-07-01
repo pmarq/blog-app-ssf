@@ -8,10 +8,7 @@ import FeaturedProductsSlider from "./components/common/featured-banner/Featured
 import PostsListWrapper from "./components/common/PostListWrapper";
 
 // Função auxiliar para buscar banners via API interna
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ||
-  "http://localhost:3000" ||
-  "http://localhost:3001";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
 async function fetchFeaturedBanners() {
   const res = await fetch(`${baseUrl}/api/featured-banners`, {
