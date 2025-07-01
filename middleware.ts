@@ -72,11 +72,30 @@ export const config = {
 };
  */
 
+// middleware.ts  (BLOG)
+
+// 1 – hosts autorizados
+const ALLOWED_HOSTS = [
+  "inlevor.com.br", // proxy do portal
+  "blog-app-cloudinary-v3.vercel.app", // domínio do deploy
+];
+
 import { decodeJwt } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  /* ───────────── valida host ───────────── */
+  const host =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    "";
+
+  // permite localhost durante `next dev`
+  if (!host.startsWith("localhost") && !ALLOWED_HOSTS.includes(host)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
   console.log("MIDDLEWARE: URL:", request.url);
 
   const cookieStore = await cookies(); // Acessa os cookies
