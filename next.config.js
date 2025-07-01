@@ -28,7 +28,7 @@ const nextConfig = {
       bodySizeLimit: "10mb",
 
       // Domínios que o navegador mostra ao usuário
-      allowedOrigins: ["https://inlevor.com.br", "https://www.inlevor.com.br"],
+      allowedOrigins: ["inlevor.com.br", "www.inlevor.com.br"],
 
       // Hosts que chegam no cabeçalho `x-forwarded-host`
       // enviado pelo edge (Vercel). Use o curinga se
