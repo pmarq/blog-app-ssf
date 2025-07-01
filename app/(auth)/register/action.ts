@@ -67,7 +67,7 @@ export const registerUser = async (data: {
     const verificationLink = await auth.generateEmailVerificationLink(
       data.email,
       {
-        url: `${process.env.APP_URL}/blog/login`, // Redireciona para login após verificar
+        url: `${process.env.APP_URL}/login`, // Redireciona para login após verificar
         handleCodeInApp: true,
         // Passa o idioma desejado
         /* dynamicLinkDomain: process.env.FIREBASE_DYNAMIC_LINK_DOMAIN,  */ // Se usar Dynamic Links
