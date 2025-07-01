@@ -22,8 +22,22 @@ const nextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
     ],
   },
+  // ──────── Server Actions ────────
   experimental: {
-    serverActions: { bodySizeLimit: "10mb" },
+    serverActions: {
+      bodySizeLimit: "10mb",
+
+      // Domínios que o navegador mostra ao usuário
+      allowedOrigins: ["https://inlevor.com.br", "https://www.inlevor.com.br"],
+
+      // Hosts que chegam no cabeçalho `x-forwarded-host`
+      // enviado pelo edge (Vercel). Use o curinga se
+      // pretender mais subdomínios.
+      allowedForwardedHosts: [
+        "blog-app-cloudinary-v3.vercel.app",
+        // '*.vercel.app'  // ← se mudar de pré-visualização constantemente
+      ],
+    },
   },
 };
 
