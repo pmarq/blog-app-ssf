@@ -70,7 +70,7 @@ export const registerUser = async (data: {
         url: `${process.env.APP_URL}/blog/login`, // Redireciona para login após verificar
         handleCodeInApp: true,
         // Passa o idioma desejado
-        dynamicLinkDomain: process.env.FIREBASE_DYNAMIC_LINK_DOMAIN, // Se usar Dynamic Links
+        /* dynamicLinkDomain: process.env.FIREBASE_DYNAMIC_LINK_DOMAIN,  */ // Se usar Dynamic Links
       }
     );
 
