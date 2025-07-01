@@ -6,6 +6,7 @@ const isProd = process.env.NODE_ENV === "production";
 const nextConfig = {
   basePath: isProd ? "/blog" : "",
   trailingSlash: false,
+  trustHostHeader: true,
   images: {
     remotePatterns: [
       {
@@ -22,7 +23,6 @@ const nextConfig = {
     ],
   },
   experimental: {
-    trustHostHeader: true,
     serverActions: { bodySizeLimit: "10mb" },
   },
 };
