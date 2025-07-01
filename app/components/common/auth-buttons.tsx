@@ -32,7 +32,7 @@ export default function AuthButtons() {
                   height={70}
                 />
               )}
-              <AvatarFallback className="text-sky-950">
+              <AvatarFallback className="text-slade-200">
                 {(auth.currentUser.displayName || auth.currentUser.email)?.[0]}
               </AvatarFallback>
             </Avatar>
