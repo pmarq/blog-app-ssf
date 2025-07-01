@@ -5,6 +5,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig = {
   basePath: isProd ? "/blog" : "",
+  trustHostHeader: true,
   trailingSlash: false,
   images: {
     remotePatterns: [
