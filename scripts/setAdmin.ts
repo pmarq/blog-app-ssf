@@ -1,5 +1,4 @@
 // scripts/setAdmin.ts
-// scripts/setAdmin.js
 
 const { admin } = require("../firebase/server");
 
