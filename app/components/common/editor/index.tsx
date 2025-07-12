@@ -29,6 +29,7 @@ import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { Thumbnail } from "@/app/models/Post";
 import { ThumbnailData } from "@/app/models/ThumbnailData";
 import { Category, getCategories } from "@/lib/categories";
+import { withBasePath } from "@/lib/withBasePath";
 
 export interface FinalPost extends SeoResult {
   title: string;
@@ -143,7 +144,9 @@ export default function Editor({
 
     try {
       const res = await fetch(
-        `/api/cloudinary/list-images?folder=gallery/${currentUser?.uid}`,
+        withBasePath(
+          `/api/cloudinary/list-images?folder=gallery/${currentUser?.uid}`
+        ),
         {
           headers: {
             Authorization: `Bearer ${token}`,

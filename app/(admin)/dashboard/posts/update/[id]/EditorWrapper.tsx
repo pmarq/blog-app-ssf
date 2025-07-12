@@ -8,6 +8,7 @@ import { useAuth } from "@/context/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { PostDetail } from "@/app/utils/types";
+import { withBasePath } from "@/lib/withBasePath";
 
 interface EditorWrapperProps {
   post: PostDetail;
@@ -56,7 +57,9 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
         // 2. Solicitar a assinatura de upload ao servidor
         const folder = `posts/${post.id}`;
         const signatureResponse = await fetch(
-          `/api/cloudinary/get-signature?folder=${encodeURIComponent(folder)}`,
+          withBasePath(
+            `/api/cloudinary/get-signature?folder=${encodeURIComponent(folder)}`
+          ),
           {
             method: "GET",
             headers: {
@@ -121,16 +124,24 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
       }
 
       // Preparar os dados do post para atualização
+      const meta =
+        typeof updatedPost.meta === "string" && updatedPost.meta.trim()
+          ? updatedPost.meta.trim() // usuário digitou algo válido
+          : post.meta.trim(); // reaproveita o valor existente
+
       const postData: any = {
         title: updatedPost.title,
         content: updatedPost.content,
-        meta: updatedPost.meta || "",
-        tagsArray: updatedPost.tagsArray ?? post.tags,
+        meta, // <-- usa a variável meta corrigida
+        tagsArray: (updatedPost.tagsArray ?? post.tags).filter(Boolean),
         slug: updatedPost.slug || post.slug,
-        categorySlug: updatedPost.categorySlug,
-        categoryTitle: updatedPost.categoryTitle,
-        categoryId: updatedPost.categoryId,
-        authorId: currentUser.uid, // Passa o authorId para a ação server
+
+        // mantém categoria anterior se nenhuma nova foi escolhida
+        categorySlug: updatedPost.categorySlug || post.categorySlug,
+        categoryTitle: updatedPost.categoryTitle || post.categoryTitle,
+        categoryId: updatedPost.categoryId || post.categoryId,
+
+        authorId: currentUser.uid,
       };
 
       if (thumbnailData) {
@@ -142,7 +153,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
 
       // Atualiza o post no Firestore via uma requisição PUT para a API
       const idToken = await currentUser.getIdToken();
-      const response = await fetch(`/api/posts/${post.id}`, {
+      const response = await fetch(withBasePath(`/api/posts/${post.id}`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -177,7 +188,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = ({ post }) => {
         description: "Post atualizado com sucesso!",
         variant: "default",
       });
-      router.replace("/dashboard/posts"); // Redireciona imediatamente após a atualização
+      router.replace(withBasePath("/dashboard/posts")); // Redireciona imediatamente após a atualização
     } catch (error: any) {
       console.error("Erro ao atualizar o post:", error);
       setErrorMessage(error.message || "Ocorreu um erro ao atualizar o post.");

@@ -92,12 +92,13 @@ export async function PUT(
     const parsedTags: string[] = Array.isArray(rawTags)
       ? rawTags
       : typeof rawTags === "string"
-      ? rawTags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : [];
-    const finalTags = parsedTags.length > 0 ? parsedTags : existing.tags ?? [];
+        ? rawTags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+    const finalTags =
+      parsedTags.length > 0 ? parsedTags : (existing.tags ?? []);
 
     const targetSlug = newSlug || existing.slug;
     const targetCat = newCatSlug || existing.categorySlug;
@@ -136,6 +137,7 @@ export async function PUT(
 
     const err = validateSchema(postValidationSchema, { ...update, categoryId });
     if (err) {
+      +console.warn("PUT /posts – validação falhou:", err);
       return NextResponse.json({ error: true, message: err }, { status: 400 });
     }
 

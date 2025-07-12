@@ -1,5 +1,7 @@
 // lib/cloudinaryUpload.ts
 
+import { withBasePath } from "./withBasePath";
+
 export interface UploadResponse {
   secure_url: string;
   public_id: string;
@@ -19,7 +21,9 @@ export async function uploadToCloudinary(
   try {
     // Solicita a assinatura e timestamp do servidor, passando os parâmetros necessários
     const signatureResponse = await fetch(
-      `/api/cloudinary/get-signature?folder=${encodeURIComponent(folder)}`
+      withBasePath(
+        `/api/cloudinary/get-signature?folder=${encodeURIComponent(folder)}`
+      )
     );
 
     if (!signatureResponse.ok) {
@@ -33,7 +37,10 @@ export async function uploadToCloudinary(
     // Monta o FormData com o arquivo e informações necessárias para uploads assinados
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "");
+    formData.append(
+      "api_key",
+      process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || ""
+    );
     formData.append("timestamp", timestamp.toString());
     formData.append("signature", signature);
     formData.append("folder", folder);
@@ -51,7 +58,9 @@ export async function uploadToCloudinary(
 
     if (!res.ok) {
       console.error("Erro na resposta do Cloudinary:", data);
-      throw new Error(data.error?.message || "Erro ao fazer upload para o Cloudinary.");
+      throw new Error(
+        data.error?.message || "Erro ao fazer upload para o Cloudinary."
+      );
     }
 
     if (!data.secure_url || !data.public_id) {
@@ -68,5 +77,3 @@ export async function uploadToCloudinary(
     throw error;
   }
 }
-
-
