@@ -137,7 +137,6 @@ export async function PUT(
 
     const err = validateSchema(postValidationSchema, { ...update, categoryId });
     if (err) {
-      +console.warn("PUT /posts – validação falhou:", err);
       return NextResponse.json({ error: true, message: err }, { status: 400 });
     }
 
