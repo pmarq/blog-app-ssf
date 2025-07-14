@@ -95,7 +95,7 @@ export default async function SinglePostPage({
         )}
 
         {/* Título */}
-        <h1 className="text-3xl font-semibold text-primary-dark dark:text-primary">
+        <h1 className="text-2xl md:text-3xl font-semibold text-primary-dark dark:text-primary">
           {title}
         </h1>
 
