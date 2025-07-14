@@ -36,8 +36,7 @@ const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
               <Image
                 src={thumbnail.url}
                 alt={`Thumbnail for ${title}`}
-                layout="fill"
-                objectFit="cover"
+                fill
                 className="rounded-2xl transform transition-transform duration-300 hover:scale-105"
               />
             </div>
