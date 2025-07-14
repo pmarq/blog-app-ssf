@@ -96,37 +96,34 @@ body {
 
 /* Outros Estilos Específicos */
 .property-description h1 {
-  @apply text-5xl font-bold my-4;
+  @apply text-2xl my-4;
 }
 
 .property-description h2 {
-  @apply text-4xl font-bold my-4;
+  @apply text-xl my-4;
 }
 
 .property-description h3 {
-  @apply text-3xl font-bold my-4;
-}
-
+  @apply text-lg my-4;
+} /* ≈ 18 px */
 .property-description h4 {
-  @apply text-2xl font-bold my-4;
-}
-
+  @apply text-base my-4;
+} /* ≈ 16 px */
 .property-description h5 {
-  @apply text-xl font-bold my-4;
-}
-
+  @apply text-sm my-4;
+} /* ≈ 14 px */
 .property-description h6 {
-  @apply text-lg font-bold my-4;
-}
+  @apply text-xs my-4;
+} /* ≈ 12 px */
 
+/* Parágrafos e listas */
 .property-description p {
-  @apply my-4 font-normal text-base;
+  @apply text-base my-4 leading-relaxed;
 }
 
 .property-description ul {
-  @apply list-disc my-4 ml-4;
+  @apply list-disc pl-5 my-4 text-base leading-relaxed;
 }
-
 .property-description ol {
-  @apply list-decimal my-4 ml-4;
+  @apply list-decimal pl-5 my-4 text-base leading-relaxed;
 }

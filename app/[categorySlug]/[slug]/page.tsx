@@ -1,5 +1,6 @@
 // app/[categorySlug]/[slug]/page.tsx
 
+// app/[categorySlug]/[slug]/page.tsx
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import dateFormat from "dateformat";
@@ -10,31 +11,25 @@ import SafeContent from "@/app/components/common/SafeContent";
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
 import Comments from "@/app/components/common/comments/Comments";
 
-// ⏱ ISR: revalida a cada 60 segundos
+// ⏱ ISR: revalida a cada 60 s
 export const revalidate = 60;
 
-/**
- * Gera os caminhos estáticos: [categorySlug]/[slug]
- */
+/* --- Rotas estáticas ---------------------------------------------------------------- */
 export async function generateStaticParams() {
   const snapshot = await getAllPostSlugs();
-
   return snapshot.map(({ categorySlug, slug }) => ({
     categorySlug,
     slug,
   }));
 }
 
-/**
- * Gera metadados dinâmicos com base no slug + categoria.
- */
+/* --- Metadados dinâmicos ------------------------------------------------------------- */
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string; categorySlug: string }>;
 }): Promise<Metadata> {
   const { slug, categorySlug } = await params;
-
   const post = await getPostByCategoryAndSlug(categorySlug, slug);
 
   if (!post) {
@@ -61,16 +56,13 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Página individual do post por categoria + slug
- */
+/* --- Página do post ----------------------------------------------------------------- */
 export default async function SinglePostPage({
   params,
 }: {
   params: Promise<{ slug: string; categorySlug: string }>;
 }) {
   const { slug, categorySlug } = await params;
-
   const post: PostDetail | null = await getPostByCategoryAndSlug(
     categorySlug,
     slug
@@ -82,9 +74,17 @@ export default async function SinglePostPage({
 
   return (
     <DefaultLayout title={title} desc={meta}>
-      <div className="pb-20">
+      <section
+        className="
+          max-w-4xl w-full mx-auto     /* Coluna ~720 px, centralizada             */
+          px-4 lg:px-0                 /* Padding lateral em telas pequenas        */
+          space-y-8                    /* Respiro uniforme entre blocos            */
+          pb-20
+        "
+      >
+        {/* Capa */}
         {thumbnail && (
-          <div className="relative aspect-video rounded overflow-hidden">
+          <div className="relative w-full aspect-video overflow-hidden rounded-lg">
             <Image
               src={thumbnail.url}
               alt={title}
@@ -94,14 +94,16 @@ export default async function SinglePostPage({
           </div>
         )}
 
-        <h1 className="text-6xl font-semibold text-primary-dark dark:text-primary py-2">
+        {/* Título */}
+        <h1 className="text-3xl font-semibold text-primary-dark dark:text-primary">
           {title}
         </h1>
 
-        <div className="flex items-center justify-between py-2 text-secondary-dark dark:text-secondary-light">
-          <div className="flex flex-wrap items-center space-x-1">
-            {tags.map((t, index) => (
-              <span key={`${t}-${index}`} className="text-sm">
+        {/* Tags + data */}
+        <div className="flex items-center justify-between text-secondary-dark dark:text-secondary-light">
+          <div className="flex flex-wrap items-center gap-x-1">
+            {tags.map((t, i) => (
+              <span key={`${t}-${i}`} className="text-sm">
                 #{t}
               </span>
             ))}
@@ -111,12 +113,12 @@ export default async function SinglePostPage({
           </span>
         </div>
 
+        {/* Conteúdo */}
         <SafeContent content={content} />
 
-        <div className="mt-10">
-          <Comments belongsTo={slug} />
-        </div>
-      </div>
+        {/* Comentários */}
+        <Comments belongsTo={slug} />
+      </section>
     </DefaultLayout>
   );
 }
