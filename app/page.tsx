@@ -35,12 +35,12 @@ export const metadata: Metadata = {
   title: "Blog Inlevor | Mercado Imobiliário de Alto Padrão",
   description:
     "Artigos, análises e tendências sobre o mercado imobiliário de alto padrão. Acompanhe e encontre oportunidades exclusivas.",
-  alternates: { canonical: `${BASE_URL}/blog` },
+  alternates: { canonical: `${BASE_URL}` },
   openGraph: {
     title: "Blog Inlevor | Mercado de Alto Padrão",
     description:
-      "Insights sobre lançamentos, preços e macroeconomia para quem investe em imóveis premium.",
-    url: `${BASE_URL}/blog`,
+      "Insights sobre lançamentos, novidades e tendências sobre o mercado imobiliário de alto padrão.",
+    url: `${BASE_URL}`,
     siteName: "Inlevor",
     type: "website",
     locale: "pt_BR",
