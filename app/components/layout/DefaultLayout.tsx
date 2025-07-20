@@ -4,8 +4,8 @@ import React from "react";
 import Head from "next/head";
 
 interface DefaultLayoutProps {
-  title: string;
-  desc: string;
+  title?: string;
+  desc?: string;
   children: React.ReactNode;
 }
 

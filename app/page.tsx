@@ -1,67 +1,128 @@
 // app/page.tsx
 
-import React from "react";
+// app/blog/page.tsx
+/* Página inicial do Blog Inlevor
+   ──> Usa variável de ambiente para baseURL
+   ──> Metadata API + ISR + JSON‑LD
+*/
+import { Metadata } from "next";
+import Script from "next/script";
+
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
 import { fetchInitialPosts } from "@/lib/fetchPosts";
-import HighlightedPost from "./components/common/HighlightedPost"; // Novo componente
+import HighlightedPost from "./components/common/HighlightedPost";
 import FeaturedProductsSlider from "./components/common/featured-banner/FeaturedBannerSlider";
 import PostsListWrapper from "./components/common/PostListWrapper";
 
-// Função auxiliar para buscar banners via API interna
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-async function fetchFeaturedBanners() {
-  const res = await fetch(`${baseUrl}/api/featured-banners`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error("Falha ao buscar banners");
-  }
-
-  return res.json();
+/* ─────────────────────────────────────────────
+ * 1. Resolver BASE_URL de forma segura
+ *    • NEXT_PUBLIC_BASE_URL (ex.: https://inlevor.com.br)
+ *    • VERCEL_URL (pré‑visualizações)
+ *    • Fallback → localhost
+ * ────────────────────────────────────────────*/
+function getBaseURL(): string {
+  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
 }
-export default async function HomePage() {
-  const limit = 17; // 1 para HighlightedPost + 16 para PostsListWrapper
+const BASE_URL = getBaseURL();
+const OG_IMAGE = "/public/blog-og.png"; // 1200 × 630
 
-  // Busca os posts
+/* ─────────────────────────────────────────────
+ * 2. Metadata estática (Next Metadata API)
+ * ────────────────────────────────────────────*/
+export const metadata: Metadata = {
+  title: "Blog Inlevor | Mercado Imobiliário de Alto Padrão",
+  description:
+    "Artigos, análises e tendências sobre o mercado imobiliário de alto padrão. Acompanhe e encontre oportunidades exclusivas.",
+  alternates: { canonical: `${BASE_URL}/blog` },
+  openGraph: {
+    title: "Blog Inlevor | Mercado de Alto Padrão",
+    description:
+      "Insights sobre lançamentos, preços e macroeconomia para quem investe em imóveis premium.",
+    url: `${BASE_URL}/blog`,
+    siteName: "Inlevor",
+    type: "website",
+    locale: "pt_BR",
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "Blog Inlevor" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog Inlevor | Mercado de Alto Padrão",
+    description:
+      "Dados, tendências e oportunidades no mercado imobiliário de alto padrão – atualizado pela Inlevor.",
+    images: [OG_IMAGE],
+  },
+  robots: { index: true, follow: true },
+};
+
+/* ─────────────────────────────────────────────
+ * 3. ISR – revalida a cada 60 s
+ * ────────────────────────────────────────────*/
+export const revalidate = 60;
+
+/* ─────────────────────────────────────────────
+ * 4. Página
+ * ────────────────────────────────────────────*/
+export default async function BlogHomePage() {
+  /* Busca posts */
+  const limit = 17;
   const { posts, lastVisibleId } = await fetchInitialPosts(limit);
 
-  if (!posts || posts.length === 0) {
+  if (!posts?.length) {
     return (
-      <DefaultLayout
-        title="Home - Seu Blog"
-        desc="Bem-vindo ao nosso blog onde compartilhamos as últimas novidades e insights."
-      >
+      <DefaultLayout>
         <p>Nenhum post encontrado.</p>
       </DefaultLayout>
     );
   }
 
-  // Separa o primeiro post como o último post destacado
   const [latestPost, ...otherPosts] = posts;
 
-  // Busca os banners
-  const banners = await fetchFeaturedBanners();
-  console.log("BANNERS====>", banners);
+  /* Busca banners via API interna */
+  const banners = await fetch(`${BASE_URL}/api/featured-banners`, {
+    cache: "no-store",
+  }).then((r) => r.json());
 
   return (
-    <DefaultLayout
-      title="Home - Seu Blog"
-      desc="Bem-vindo ao nosso blog onde compartilhamos as últimas novidades e insights."
-    >
-      {/* Banner */}
+    <DefaultLayout>
+      {/* Dados estruturados JSON‑LD */}
+      <Script
+        id="ld-blog"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            name: "Blog Inlevor",
+            url: `${BASE_URL}/blog`,
+            description:
+              "Artigos e tendências sobre o mercado imobiliário de alto padrão.",
+            publisher: {
+              "@type": "Organization",
+              name: "Inlevor",
+              logo: {
+                "@type": "ImageObject",
+                url: `${BASE_URL}/logo.png`,
+              },
+            },
+          }),
+        }}
+      />
+
+      {/* Banner de destaque */}
       <div className="mb-14">
         <FeaturedProductsSlider banners={banners} />
       </div>
+
       <div className="mb-8 md:mb-14 text-2xl font-semibold text-sky-950 text-center">
         Acompanhe o Mercado Imobiliário de Alto Padrão
       </div>
-      {/* Último Post Destacado */}
-      <div className="mb-2">
-        <HighlightedPost post={latestPost} />
-      </div>
-      {/* Outros Posts */}
+
+      {/* Post em destaque */}
+      <HighlightedPost post={latestPost} />
+
+      {/* Lista de artigos */}
       <div className="p-0 md:p-10">
         <h2 className="text-xl text-sky-950 font-semibold mb-4">
           Confira também...
@@ -69,7 +130,7 @@ export default async function HomePage() {
         <PostsListWrapper
           initialPosts={otherPosts}
           initialLastVisibleId={lastVisibleId}
-          hasMore={false} // Ajuste conforme a lógica de paginação
+          hasMore={false} /* ajustar se implementar paginação */
           showControls={false}
         />
       </div>
