@@ -95,7 +95,7 @@ export default async function BlogHomePage() {
             "@context": "https://schema.org",
             "@type": "Blog",
             name: "Blog Inlevor",
-            url: `${BASE_URL}/blog`,
+            url: `${BASE_URL}`,
             description:
               "Artigos e tendências sobre o mercado imobiliário de alto padrão.",
             publisher: {
