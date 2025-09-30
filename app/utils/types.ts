@@ -12,6 +12,7 @@ export interface PostDetail {
   categorySlug: string;
   categoryId: string;
   createdAt: string;
+  updatedAt?: string | number | Date;
 }
 
 export interface PostInput {
