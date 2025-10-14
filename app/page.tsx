@@ -26,7 +26,7 @@ function getBaseURL(): string {
   return "http://localhost:3000";
 }
 const BASE_URL = getBaseURL();
-const OG_IMAGE = "/public/blog-og.png"; // 1200 × 630
+const OG_IMAGE = "/blog-og.png"; // 1200 × 630
 
 /* ─────────────────────────────────────────────
  * 2. Metadata estática (Next Metadata API)
