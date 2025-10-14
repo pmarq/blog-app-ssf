@@ -39,6 +39,19 @@ function toDateSafe(v: unknown): Date {
   return isNaN(d.getTime()) ? new Date() : d;
 }
 
+/** Estima wordCount removendo HTML rapidamente */
+function estimateWordCount(html: string | undefined): number | undefined {
+  if (!html) return undefined;
+  const text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return undefined;
+  return text.split(" ").length;
+}
+
 /* --- Rotas estáticas --------------------------------------------------------------- */
 export async function generateStaticParams() {
   const snapshot = await getAllPostSlugs();
@@ -64,9 +77,17 @@ export async function generateMetadata({
     };
   }
 
-  const ogImage = post.thumbnail?.url ?? "/og-default.png"; // coloque o fallback em /public
+  const ogImage = post.thumbnail?.url ?? "/og-default.png"; // fallback em /public
   // IMPORTANTE: incluir /blog por causa do basePath
   const canonicalPath = `/blog/${categorySlug}/${slug}`;
+
+  // (Opcional) se houver campo de rascunho/não indexável no seu tipo:
+  const maybeIndexable =
+    (post as unknown as { indexable?: boolean; draft?: boolean }) ?? {};
+  const robotsIndex =
+    maybeIndexable.indexable === false || maybeIndexable.draft === true
+      ? { index: false, follow: false as const }
+      : { index: true, follow: true as const };
 
   return {
     title: post.title,
@@ -86,6 +107,7 @@ export async function generateMetadata({
       description: post.meta,
       images: [ogImage],
     },
+    robots: robotsIndex,
   };
 }
 
@@ -110,6 +132,8 @@ export default async function SinglePostPage({
     (
       post as unknown as {
         updatedAt?: string | number | Date | { toDate: () => Date };
+        indexable?: boolean;
+        draft?: boolean;
       }
     ).updatedAt ?? createdAt;
 
@@ -117,40 +141,75 @@ export default async function SinglePostPage({
   const modifiedISO = toDateSafe(maybeUpdated).toISOString();
   const displayDate = dateFormat(toDateSafe(createdAt), "d-mmm-yyyy");
   const ogImage = thumbnail?.url ?? "/og-default.png";
+  const wordCount = estimateWordCount(content);
+  const canonicalPath = `/blog/${categorySlug}/${slug}`;
 
   return (
     <DefaultLayout title={title} desc={meta}>
-      {/* JSON-LD Article (ajuda no Discover e SEO) */}
+      {/* JSON-LD BlogPosting (Discover/SEO) */}
       <Script
         id="ld-article"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "Article",
+            "@type": "BlogPosting", // ← mais específico que Article
             headline: title,
             description: meta,
+            image: ogImage,
             datePublished: publishedISO,
             dateModified: modifiedISO,
-            image: ogImage,
+            inLanguage: "pt-BR",
+            articleSection: categorySlug,
+            wordCount, // opcional (apenas se definido)
             mainEntityOfPage: {
               "@type": "WebPage",
-              // IMPORTANTE: incluir /blog
-              "@id": `/blog/${categorySlug}/${slug}`,
+              "@id": canonicalPath, // relativo; metadataBase deixa absoluto
             },
             author: {
               "@type": "Organization",
               name: "Inlevor",
+              url: "/blog",
             },
             publisher: {
               "@type": "Organization",
               name: "Inlevor",
+              url: "/blog",
               logo: {
                 "@type": "ImageObject",
                 url: "/logo.png",
+                width: 120, // recomendável informar dimensões do logo
+                height: 60,
               },
             },
             keywords: Array.isArray(tags) ? tags.join(", ") : undefined,
+          }),
+        }}
+      />
+
+      {/* JSON-LD Breadcrumbs */}
+      <Script
+        id="ld-breadcrumb"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Blog", item: "/blog" },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: categorySlug,
+                item: `/blog/${categorySlug}`,
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: title,
+                item: canonicalPath,
+              },
+            ],
           }),
         }}
       />
@@ -184,7 +243,10 @@ export default async function SinglePostPage({
               </span>
             ))}
           </div>
-          <span className="text-sm">{displayDate}</span>
+          {/* use <time> semântica */}
+          <time className="text-sm" dateTime={publishedISO}>
+            {displayDate}
+          </time>
         </div>
 
         {/* Conteúdo */}
