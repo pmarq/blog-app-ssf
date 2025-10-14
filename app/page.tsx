@@ -1,6 +1,4 @@
-// app/page.tsx
-
-// app/page.tsx  ⬅️ (HOME do BLOG quando basePath="/blog")
+// app/page.tsx  ⬅️ HOME do BLOG quando basePath="/blog"
 
 import type { Metadata } from "next";
 import Script from "next/script";
@@ -10,6 +8,9 @@ import { fetchInitialPosts } from "@/lib/fetchPosts";
 import HighlightedPost from "./components/common/HighlightedPost";
 import FeaturedProductsSlider from "./components/common/featured-banner/FeaturedBannerSlider";
 import PostsListWrapper from "./components/common/PostListWrapper";
+
+// ✅ use a action diretamente (evita fetch/URL/basePath)
+import { getFeaturedBanners } from "@/app/(admin)/dashboard/featured-banners/action";
 
 /* ─────────────────────────────────────────────
  * 1) Constantes locais
@@ -24,7 +25,6 @@ export const metadata: Metadata = {
   title: "Blog Inlevor | Mercado Imobiliário de Alto Padrão",
   description:
     "Artigos, análises e tendências sobre o mercado imobiliário de alto padrão. Acompanhe e encontre oportunidades exclusivas.",
-  // Como o layout já tem metadataBase, use caminhos relativos:
   alternates: { canonical: BLOG_PATH },
   openGraph: {
     title: "Blog Inlevor | Mercado de Alto Padrão",
@@ -55,15 +55,12 @@ export const revalidate = 60;
  * 4) Página
  * ────────────────────────────────────────────*/
 export default async function BlogHomePage() {
-  // Busca posts
+  // Posts
   const limit = 17;
   const { posts, lastVisibleId } = await fetchInitialPosts(limit);
 
-  // Busca banners via API interna (URL relativa!)
-  const banners = await fetch(`/api/featured-banners`, {
-    cache: "no-store",
-    // next: { revalidate: 0 } // alternativa
-  }).then((r) => r.json());
+  // ✅ Banners via função interna (sem HTTP)
+  const banners = await getFeaturedBanners();
 
   if (!posts?.length) {
     return (
@@ -80,11 +77,7 @@ export default async function BlogHomePage() {
 
   return (
     <DefaultLayout>
-      {/* JSON-LD (use caminhos absolutos). Como o layout define metadataBase,
-          você pode montar a URL absoluta no cliente, mas é melhor resolvê-la
-          aqui usando location só no client. Para manter absoluto no server,
-          você pode usar uma ENV pública com o domínio, mas se não tiver,
-          mantenha relativo sem prejuízo. */}
+      {/* JSON-LD (caminhos relativos → resolvem via metadataBase do layout) */}
       <Script
         id="ld-blog"
         type="application/ld+json"
@@ -93,7 +86,7 @@ export default async function BlogHomePage() {
             "@context": "https://schema.org",
             "@type": "Blog",
             name: "Blog Inlevor",
-            url: BLOG_PATH, // relativo (metadataBase torna absoluto)
+            url: BLOG_PATH,
             description:
               "Artigos e tendências sobre o mercado imobiliário de alto padrão.",
             publisher: {
@@ -101,7 +94,7 @@ export default async function BlogHomePage() {
               name: "Inlevor",
               logo: {
                 "@type": "ImageObject",
-                url: "/logo.png", // relativo; vira absoluto via metadataBase
+                url: "/logo.png",
               },
             },
           }),
