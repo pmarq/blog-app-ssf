@@ -1,11 +1,9 @@
 // app/page.tsx
-
-// app/blog/page.tsx
 /* Página inicial do Blog Inlevor
-   ──> Usa variável de ambiente para baseURL
-   ──> Metadata API + ISR + JSON‑LD
+   ──> Usa variáveis de ambiente com /blog sem duplicar
+   ──> Metadata API + ISR + JSON-LD
 */
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Script from "next/script";
 
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
@@ -15,78 +13,133 @@ import FeaturedProductsSlider from "./components/common/featured-banner/Featured
 import PostsListWrapper from "./components/common/PostListWrapper";
 
 /* ─────────────────────────────────────────────
- * 1. Resolver BASE_URL de forma segura
- *    • NEXT_PUBLIC_BASE_URL (ex.: https://inlevor.com.br)
- *    • VERCEL_URL (pré‑visualizações)
- *    • Fallback → localhost
+ * Helpers para normalizar BASE_URL com path
  * ────────────────────────────────────────────*/
-function getBaseURL(): string {
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
+const stripTrailingSlash = (s: string) => s.replace(/\/+$/, "");
+const ensureLeadingSlash = (s: string) => (s.startsWith("/") ? s : `/${s}`);
+
+function getOriginAndBasePath() {
+  const raw =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://inlevor.com.br");
+
+  let origin = "https://inlevor.com.br";
+  let baseFromUrl = "";
+
+  try {
+    const u = new URL(raw);
+    origin = `${u.protocol}//${u.host}`;
+    const p = stripTrailingSlash(u.pathname || "");
+    baseFromUrl = p && p !== "/" ? p : "";
+  } catch {
+    // se vier algo como "https://inlevor.com.br/blog", tenta separar
+    const noSlashEnd = stripTrailingSlash(raw);
+    if (noSlashEnd.includes("://")) {
+      const [, hostAndPath] = noSlashEnd.split("://");
+      const firstSlash = hostAndPath.indexOf("/");
+      if (firstSlash > -1) {
+        origin = noSlashEnd.slice(0, noSlashEnd.indexOf("/", 8)); // até antes do path
+        baseFromUrl = noSlashEnd.slice(noSlashEnd.indexOf("/", 8));
+      } else {
+        origin = noSlashEnd;
+      }
+    } else {
+      origin = noSlashEnd;
+    }
+  }
+
+  const envBase = stripTrailingSlash(process.env.NEXT_PUBLIC_BASE_PATH ?? "");
+  const basePath = baseFromUrl || envBase;
+
+  return {
+    origin,
+    basePath: basePath ? ensureLeadingSlash(basePath) : "",
+  };
 }
-const BASE_URL = getBaseURL();
-const OG_IMAGE = "/blog-og.png"; // 1200 × 630
+
+const { origin: ORIGIN, basePath: BASE_PATH } = getOriginAndBasePath(); // ex.: https://inlevor.com.br + /blog
+const ABS_BLOG = `${ORIGIN}${BASE_PATH}`; // ex.: https://inlevor.com.br/blog
+const OG_IMAGE = "/blog-og.png"; // deve existir em /public/blog-og.png
 
 /* ─────────────────────────────────────────────
- * 2. Metadata estática (Next Metadata API)
+ * Metadata (canônico/OG ABSOLUTOS p/ evitar /blog/blog)
  * ────────────────────────────────────────────*/
 export const metadata: Metadata = {
   title: "Blog Inlevor | Mercado Imobiliário de Alto Padrão",
   description:
     "Artigos, análises e tendências sobre o mercado imobiliário de alto padrão. Acompanhe e encontre oportunidades exclusivas.",
-  alternates: { canonical: `${BASE_URL}` },
+  alternates: { canonical: ABS_BLOG },
   openGraph: {
     title: "Blog Inlevor | Mercado de Alto Padrão",
     description:
       "Insights sobre lançamentos, novidades e tendências sobre o mercado imobiliário de alto padrão.",
-    url: `${BASE_URL}`,
+    url: ABS_BLOG,
     siteName: "Inlevor",
     type: "website",
     locale: "pt_BR",
-    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "Blog Inlevor" }],
+    images: [
+      {
+        url: `${ORIGIN}${OG_IMAGE}`,
+        width: 1200,
+        height: 630,
+        alt: "Blog Inlevor",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Blog Inlevor | Mercado de Alto Padrão",
     description:
       "Dados, tendências e oportunidades no mercado imobiliário de alto padrão – atualizado pela Inlevor.",
-    images: [OG_IMAGE],
+    images: [`${ORIGIN}${OG_IMAGE}`],
   },
   robots: { index: true, follow: true },
 };
 
 /* ─────────────────────────────────────────────
- * 3. ISR – revalida a cada 60 s
+ * ISR – revalida a cada 60 s
  * ────────────────────────────────────────────*/
 export const revalidate = 60;
 
 /* ─────────────────────────────────────────────
- * 4. Página
+ * Página
  * ────────────────────────────────────────────*/
 export default async function BlogHomePage() {
-  /* Busca posts */
+  // Posts
   const limit = 17;
   const { posts, lastVisibleId } = await fetchInitialPosts(limit);
+
+  // Banners via API absoluta correta (respeitando /blog)
+  let banners: any[] = [];
+  try {
+    const r = await fetch(`${ABS_BLOG}/api/featured-banners`, {
+      cache: "no-store",
+    });
+    const raw = await r.json();
+    // “plain-ificar” (evita classes tipo Firestore Timestamp em Client Components)
+    banners = JSON.parse(JSON.stringify(raw ?? []));
+  } catch {
+    banners = [];
+  }
 
   if (!posts?.length) {
     return (
       <DefaultLayout>
-        <p>Nenhum post encontrado.</p>
+        <div className="max-w-4xl w-full mx-auto px-4 py-12">
+          <h1 className="text-2xl font-semibold mb-2">Blog Inlevor</h1>
+          <p className="text-slate-600">Nenhum post encontrado.</p>
+        </div>
       </DefaultLayout>
     );
   }
 
   const [latestPost, ...otherPosts] = posts;
 
-  /* Busca banners via API interna */
-  const banners = await fetch(`${BASE_URL}/api/featured-banners`, {
-    cache: "no-store",
-  }).then((r) => r.json());
-
   return (
     <DefaultLayout>
-      {/* Dados estruturados JSON‑LD */}
+      {/* JSON-LD (absoluto pra evitar ambiguidades de basePath) */}
       <Script
         id="ld-blog"
         type="application/ld+json"
@@ -94,8 +147,8 @@ export default async function BlogHomePage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Blog",
-            name: "Blog Inlevor",
-            url: `${BASE_URL}`,
+            name: "Blog Inlevor",
+            url: ABS_BLOG,
             description:
               "Artigos e tendências sobre o mercado imobiliário de alto padrão.",
             publisher: {
@@ -103,7 +156,9 @@ export default async function BlogHomePage() {
               name: "Inlevor",
               logo: {
                 "@type": "ImageObject",
-                url: `${BASE_URL}/logo.png`,
+                url: `${ORIGIN}/logo.png`,
+                width: 120,
+                height: 60,
               },
             },
           }),
