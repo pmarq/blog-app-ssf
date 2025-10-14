@@ -1,6 +1,11 @@
-// app/page.tsx  ⬅️ HOME do BLOG quando basePath="/blog"
+// app/page.tsx
 
-import type { Metadata } from "next";
+// app/blog/page.tsx
+/* Página inicial do Blog Inlevor
+   ──> Usa variável de ambiente para baseURL
+   ──> Metadata API + ISR + JSON‑LD
+*/
+import { Metadata } from "next";
 import Script from "next/script";
 
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
@@ -9,28 +14,33 @@ import HighlightedPost from "./components/common/HighlightedPost";
 import FeaturedProductsSlider from "./components/common/featured-banner/FeaturedBannerSlider";
 import PostsListWrapper from "./components/common/PostListWrapper";
 
-// ✅ use a action diretamente (evita fetch/URL/basePath)
-import { getFeaturedBanners } from "@/app/(admin)/dashboard/featured-banners/action";
-
 /* ─────────────────────────────────────────────
- * 1) Constantes locais
+ * 1. Resolver BASE_URL de forma segura
+ *    • NEXT_PUBLIC_BASE_URL (ex.: https://inlevor.com.br)
+ *    • VERCEL_URL (pré‑visualizações)
+ *    • Fallback → localhost
  * ────────────────────────────────────────────*/
-const BLOG_PATH = "/blog"; // público (coerente com basePath)
-const OG_IMAGE = "/blog-og.png"; // arquivo em /public/blog-og.png
+function getBaseURL(): string {
+  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+const BASE_URL = getBaseURL();
+const OG_IMAGE = "/public/blog-og.png"; // 1200 × 630
 
 /* ─────────────────────────────────────────────
- * 2) Metadata (use caminhos relativos!)
+ * 2. Metadata estática (Next Metadata API)
  * ────────────────────────────────────────────*/
 export const metadata: Metadata = {
   title: "Blog Inlevor | Mercado Imobiliário de Alto Padrão",
   description:
     "Artigos, análises e tendências sobre o mercado imobiliário de alto padrão. Acompanhe e encontre oportunidades exclusivas.",
-  alternates: { canonical: BLOG_PATH },
+  alternates: { canonical: `${BASE_URL}` },
   openGraph: {
     title: "Blog Inlevor | Mercado de Alto Padrão",
     description:
-      "Insights sobre lançamentos, novidades e tendências do mercado imobiliário de alto padrão.",
-    url: BLOG_PATH,
+      "Insights sobre lançamentos, novidades e tendências sobre o mercado imobiliário de alto padrão.",
+    url: `${BASE_URL}`,
     siteName: "Inlevor",
     type: "website",
     locale: "pt_BR",
@@ -47,37 +57,36 @@ export const metadata: Metadata = {
 };
 
 /* ─────────────────────────────────────────────
- * 3) ISR – revalida a cada 60 s
+ * 3. ISR – revalida a cada 60 s
  * ────────────────────────────────────────────*/
 export const revalidate = 60;
 
 /* ─────────────────────────────────────────────
- * 4) Página
+ * 4. Página
  * ────────────────────────────────────────────*/
 export default async function BlogHomePage() {
-  // Posts
+  /* Busca posts */
   const limit = 17;
   const { posts, lastVisibleId } = await fetchInitialPosts(limit);
-
-  // ✅ Banners via função interna (sem HTTP)
-  const banners = await getFeaturedBanners();
 
   if (!posts?.length) {
     return (
       <DefaultLayout>
-        <div className="max-w-4xl w-full mx-auto px-4 py-12">
-          <h1 className="text-2xl font-semibold mb-2">Blog Inlevor</h1>
-          <p className="text-slate-600">Nenhum post encontrado.</p>
-        </div>
+        <p>Nenhum post encontrado.</p>
       </DefaultLayout>
     );
   }
 
   const [latestPost, ...otherPosts] = posts;
 
+  /* Busca banners via API interna */
+  const banners = await fetch(`${BASE_URL}/api/featured-banners`, {
+    cache: "no-store",
+  }).then((r) => r.json());
+
   return (
     <DefaultLayout>
-      {/* JSON-LD (caminhos relativos → resolvem via metadataBase do layout) */}
+      {/* Dados estruturados JSON‑LD */}
       <Script
         id="ld-blog"
         type="application/ld+json"
@@ -85,8 +94,8 @@ export default async function BlogHomePage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Blog",
-            name: "Blog Inlevor",
-            url: BLOG_PATH,
+            name: "Blog Inlevor",
+            url: `${BASE_URL}`,
             description:
               "Artigos e tendências sobre o mercado imobiliário de alto padrão.",
             publisher: {
@@ -94,7 +103,7 @@ export default async function BlogHomePage() {
               name: "Inlevor",
               logo: {
                 "@type": "ImageObject",
-                url: "/logo.png",
+                url: `${BASE_URL}/logo.png`,
               },
             },
           }),
@@ -121,7 +130,7 @@ export default async function BlogHomePage() {
         <PostsListWrapper
           initialPosts={otherPosts}
           initialLastVisibleId={lastVisibleId}
-          hasMore={false} // ajustar se implementar paginação
+          hasMore={false} /* ajustar se implementar paginação */
           showControls={false}
         />
       </div>
