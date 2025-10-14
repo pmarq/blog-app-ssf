@@ -1,29 +1,46 @@
 // app/robots.ts
 import type { MetadataRoute } from "next";
 
+/* ── helpers ─────────────────────────────── */
 const stripTrailingSlash = (s: string) => s.replace(/\/+$/, "");
-const trimSlashes = (s: string) => s.replace(/^\/+|\/+$/g, "");
+const ensureLeadingSlash = (s: string) => (s.startsWith("/") ? s : `/${s}`);
 
-// ORIGIN: só domínio (sem /blog, sem barra final)
-const ORIGIN = stripTrailingSlash(
-  process.env.NEXT_PUBLIC_BASE_URL
-    ? process.env.NEXT_PUBLIC_BASE_URL
-    : process.env.VERCEL_URL
+function getOriginAndBasePath() {
+  const raw =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : "https://inlevor.com.br"
-);
+      : "https://inlevor.com.br");
 
-// basePath do app (em prod é /blog; em dev pode ser vazio)
-const RAW_BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "/blog";
-const BASE_PATH = trimSlashes(RAW_BASE_PATH); // "blog" ou ""
+  let origin = "https://inlevor.com.br";
+  let baseFromUrl = "";
 
+  try {
+    const u = new URL(raw);
+    origin = `${u.protocol}//${u.host}`;
+    const p = stripTrailingSlash(u.pathname || "");
+    baseFromUrl = p && p !== "/" ? p : "";
+  } catch {
+    origin = stripTrailingSlash(raw);
+  }
+
+  const envBase = stripTrailingSlash(process.env.NEXT_PUBLIC_BASE_PATH ?? "");
+  const basePath = baseFromUrl || envBase;
+
+  return {
+    origin,
+    basePath: basePath ? ensureLeadingSlash(basePath) : "",
+  };
+}
+
+/* ── robots ──────────────────────────────── */
 export default function robots(): MetadataRoute.Robots {
-  // monta /<basePath>/sitemap.xml apenas se houver basePath
-  const sitemapPath = BASE_PATH ? `/${BASE_PATH}/sitemap.xml` : `/sitemap.xml`;
+  const { origin, basePath } = getOriginAndBasePath();
+  const sitemapUrl = `${origin}${basePath || ""}/sitemap.xml`; // ok com/sem /blog
 
   return {
     rules: [{ userAgent: "*", allow: "/", disallow: ["/api/"] }],
-    sitemap: `${ORIGIN}${sitemapPath}`,
+    sitemap: sitemapUrl,
     host: "inlevor.com.br",
   };
 }
