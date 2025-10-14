@@ -1,11 +1,8 @@
 // app/page.tsx
 
-// app/blog/page.tsx
-/* Página inicial do Blog Inlevor
-   ──> Usa variável de ambiente para baseURL
-   ──> Metadata API + ISR + JSON‑LD
-*/
-import { Metadata } from "next";
+// app/page.tsx  ⬅️ (HOME do BLOG quando basePath="/blog")
+
+import type { Metadata } from "next";
 import Script from "next/script";
 
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
@@ -15,32 +12,25 @@ import FeaturedProductsSlider from "./components/common/featured-banner/Featured
 import PostsListWrapper from "./components/common/PostListWrapper";
 
 /* ─────────────────────────────────────────────
- * 1. Resolver BASE_URL de forma segura
- *    • NEXT_PUBLIC_BASE_URL (ex.: https://inlevor.com.br)
- *    • VERCEL_URL (pré‑visualizações)
- *    • Fallback → localhost
+ * 1) Constantes locais
  * ────────────────────────────────────────────*/
-function getBaseURL(): string {
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
-const BASE_URL = getBaseURL();
-const OG_IMAGE = "/public/blog-og.png"; // 1200 × 630
+const BLOG_PATH = "/blog"; // público (coerente com basePath)
+const OG_IMAGE = "/blog-og.png"; // arquivo em /public/blog-og.png
 
 /* ─────────────────────────────────────────────
- * 2. Metadata estática (Next Metadata API)
+ * 2) Metadata (use caminhos relativos!)
  * ────────────────────────────────────────────*/
 export const metadata: Metadata = {
   title: "Blog Inlevor | Mercado Imobiliário de Alto Padrão",
   description:
     "Artigos, análises e tendências sobre o mercado imobiliário de alto padrão. Acompanhe e encontre oportunidades exclusivas.",
-  alternates: { canonical: `${BASE_URL}` },
+  // Como o layout já tem metadataBase, use caminhos relativos:
+  alternates: { canonical: BLOG_PATH },
   openGraph: {
     title: "Blog Inlevor | Mercado de Alto Padrão",
     description:
-      "Insights sobre lançamentos, novidades e tendências sobre o mercado imobiliário de alto padrão.",
-    url: `${BASE_URL}`,
+      "Insights sobre lançamentos, novidades e tendências do mercado imobiliário de alto padrão.",
+    url: BLOG_PATH,
     siteName: "Inlevor",
     type: "website",
     locale: "pt_BR",
@@ -57,36 +47,44 @@ export const metadata: Metadata = {
 };
 
 /* ─────────────────────────────────────────────
- * 3. ISR – revalida a cada 60 s
+ * 3) ISR – revalida a cada 60 s
  * ────────────────────────────────────────────*/
 export const revalidate = 60;
 
 /* ─────────────────────────────────────────────
- * 4. Página
+ * 4) Página
  * ────────────────────────────────────────────*/
 export default async function BlogHomePage() {
-  /* Busca posts */
+  // Busca posts
   const limit = 17;
   const { posts, lastVisibleId } = await fetchInitialPosts(limit);
+
+  // Busca banners via API interna (URL relativa!)
+  const banners = await fetch(`/api/featured-banners`, {
+    cache: "no-store",
+    // next: { revalidate: 0 } // alternativa
+  }).then((r) => r.json());
 
   if (!posts?.length) {
     return (
       <DefaultLayout>
-        <p>Nenhum post encontrado.</p>
+        <div className="max-w-4xl w-full mx-auto px-4 py-12">
+          <h1 className="text-2xl font-semibold mb-2">Blog Inlevor</h1>
+          <p className="text-slate-600">Nenhum post encontrado.</p>
+        </div>
       </DefaultLayout>
     );
   }
 
   const [latestPost, ...otherPosts] = posts;
 
-  /* Busca banners via API interna */
-  const banners = await fetch(`${BASE_URL}/api/featured-banners`, {
-    cache: "no-store",
-  }).then((r) => r.json());
-
   return (
     <DefaultLayout>
-      {/* Dados estruturados JSON‑LD */}
+      {/* JSON-LD (use caminhos absolutos). Como o layout define metadataBase,
+          você pode montar a URL absoluta no cliente, mas é melhor resolvê-la
+          aqui usando location só no client. Para manter absoluto no server,
+          você pode usar uma ENV pública com o domínio, mas se não tiver,
+          mantenha relativo sem prejuízo. */}
       <Script
         id="ld-blog"
         type="application/ld+json"
@@ -94,8 +92,8 @@ export default async function BlogHomePage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Blog",
-            name: "Blog Inlevor",
-            url: `${BASE_URL}`,
+            name: "Blog Inlevor",
+            url: BLOG_PATH, // relativo (metadataBase torna absoluto)
             description:
               "Artigos e tendências sobre o mercado imobiliário de alto padrão.",
             publisher: {
@@ -103,7 +101,7 @@ export default async function BlogHomePage() {
               name: "Inlevor",
               logo: {
                 "@type": "ImageObject",
-                url: `${BASE_URL}/logo.png`,
+                url: "/logo.png", // relativo; vira absoluto via metadataBase
               },
             },
           }),
@@ -130,7 +128,7 @@ export default async function BlogHomePage() {
         <PostsListWrapper
           initialPosts={otherPosts}
           initialLastVisibleId={lastVisibleId}
-          hasMore={false} /* ajustar se implementar paginação */
+          hasMore={false} // ajustar se implementar paginação
           showControls={false}
         />
       </div>
