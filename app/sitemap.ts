@@ -28,7 +28,8 @@ function getOriginAndBasePath() {
   }
 
   // 2) Base path também pode vir por env separada
-  const envBase = stripTrailingSlash(process.env.NEXT_PUBLIC_BASE_PATH ?? "");
+  const defaultBase = process.env.NODE_ENV === "production" ? "/blog" : "";
+  const envBase = stripTrailingSlash(process.env.NEXT_PUBLIC_BASE_PATH ?? defaultBase);
 
   // 3) Se a URL já tem path (ex.: /blog), usa esse; senão, usa o da env
   const basePath = baseFromUrl || envBase;
