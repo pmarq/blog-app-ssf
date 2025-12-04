@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import ActionButton from "../ActionButton";
+import { withBasePath } from "@/lib/withBasePath";
 import {
   Form,
   FormItem,
@@ -154,15 +155,18 @@ const FeaturedBannerForm: React.FC<Props> = ({
 
       let response;
       if (isForUpdate && initialValue) {
-        response = await fetch(`/api/featured-banners/${initialValue.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+        response = await fetch(
+          withBasePath(`/api/featured-banners/${initialValue.id}`),
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
       } else {
-        response = await fetch(`/api/featured-banners`, {
+        response = await fetch(withBasePath(`/api/featured-banners`), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

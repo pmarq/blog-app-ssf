@@ -50,7 +50,10 @@ function getOriginAndBasePath() {
     }
   }
 
-  const envBase = stripTrailingSlash(process.env.NEXT_PUBLIC_BASE_PATH ?? "");
+  const defaultBase = process.env.NODE_ENV === "production" ? "/blog" : "";
+  const envBase = stripTrailingSlash(
+    process.env.NEXT_PUBLIC_BASE_PATH ?? defaultBase
+  );
   const basePath = baseFromUrl || envBase;
 
   return {

@@ -7,6 +7,7 @@ import CommentCard from "./CommentCard";
 import CommentForm from "./CommentForm";
 import { useAuth } from "@/context/auth";
 import { CommentResponse } from "@/app/utils/types";
+import { withBasePath } from "@/lib/withBasePath";
 
 interface Props {
   belongsTo: string; // ID ou slug do post
@@ -35,7 +36,7 @@ const Comments: FC<Props> = ({ belongsTo }) => {
       setLoading(true);
       try {
         const res = await fetch(
-          `/api/comments?postId=${encodeURIComponent(postId)}`
+          withBasePath(`/api/comments?postId=${encodeURIComponent(postId)}`)
         );
         if (!res.ok) {
           console.error("Erro na resposta da API:", await res.text());
@@ -84,7 +85,7 @@ const Comments: FC<Props> = ({ belongsTo }) => {
       };
 
       // Faz a requisição POST
-      const response = await fetch("/api/comments", {
+      const response = await fetch(withBasePath("/api/comments"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +143,7 @@ const Comments: FC<Props> = ({ belongsTo }) => {
         avatar: currentUser.photoURL || "",
       };
 
-      const response = await fetch("/api/comments", {
+      const response = await fetch(withBasePath("/api/comments"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -203,14 +204,17 @@ const Comments: FC<Props> = ({ belongsTo }) => {
   const handleUpdateSubmit = async (content: string, commentId: string) => {
     try {
       const bearer = await getBearerToken();
-      const res = await fetch(`/api/comments?commentId=${commentId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: bearer,
-        },
-        body: JSON.stringify({ content }),
-      });
+      const res = await fetch(
+        withBasePath(`/api/comments?commentId=${commentId}`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: bearer,
+          },
+          body: JSON.stringify({ content }),
+        }
+      );
 
       if (!res.ok) {
         console.error("Falha ao editar comentário:", await res.text());
@@ -250,12 +254,15 @@ const Comments: FC<Props> = ({ belongsTo }) => {
   const handleOnDeleteClick = async (comment: CommentResponse) => {
     try {
       const bearer = await getBearerToken();
-      const res = await fetch(`/api/comments?commentId=${comment.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: bearer,
-        },
-      });
+      const res = await fetch(
+        withBasePath(`/api/comments?commentId=${comment.id}`),
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: bearer,
+          },
+        }
+      );
 
       if (!res.ok) {
         console.error("Falha ao deletar comentário:", await res.text());
@@ -297,14 +304,17 @@ const Comments: FC<Props> = ({ belongsTo }) => {
       const bearer = await getBearerToken();
       const action = comment.likedByOwner ? "unlike" : "like";
 
-      const res = await fetch(`/api/comments?commentId=${comment.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: bearer,
-        },
-        body: JSON.stringify({ action }),
-      });
+      const res = await fetch(
+        withBasePath(`/api/comments?commentId=${comment.id}`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: bearer,
+          },
+          body: JSON.stringify({ action }),
+        }
+      );
 
       if (!res.ok) {
         const errorData = await res.json();

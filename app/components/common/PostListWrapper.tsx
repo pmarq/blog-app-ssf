@@ -8,6 +8,7 @@ import { PostDetail } from "@/app/utils/types";
 import { useAuth } from "@/context/auth";
 import { useToast } from "@/hooks/use-toast"; // Import do hook de toast
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import { withBasePath } from "@/lib/withBasePath";
 // Importe o componente de modal de confirmação
 
 interface PostsListWrapperProps {
@@ -64,7 +65,7 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
 
     try {
       // Constrói a URL absoluta para buscar mais posts
-      const url = buildUrl(
+      const url = withBasePath(
         `/api/posts?limit=16&lastVisibleId=${lastVisibleId}`
       );
       console.log("Buscando posts na URL:", url);
@@ -133,7 +134,7 @@ const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
         return;
       }
 
-      const res = await fetch(`/api/posts/${postToDelete.id}`, {
+      const res = await fetch(withBasePath(`/api/posts/${postToDelete.id}`), {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

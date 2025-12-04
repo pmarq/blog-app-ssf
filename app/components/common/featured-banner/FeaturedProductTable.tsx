@@ -16,6 +16,7 @@ import {
   TableCell,
 } from "../../ui/table";
 import { toast } from "@/hooks/use-toast";
+import { withBasePath } from "@/lib/withBasePath";
 
 interface FeaturedBanner {
   id: string;
@@ -38,9 +39,12 @@ const FeaturedBannerTable: React.FC<Props> = ({ banners }) => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/featured-banners/${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        withBasePath(`/api/featured-banners/${id}`),
+        {
+          method: "DELETE",
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
