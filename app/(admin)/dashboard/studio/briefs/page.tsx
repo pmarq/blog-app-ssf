@@ -1,3 +1,5 @@
+"use client";
+
 import AdminLayout from "@/app/components/layout/AdminLayout";
 import StudioNav from "@/app/components/admin/StudioNav";
 import { useEffect, useState } from "react";
@@ -128,5 +130,3 @@ export default function StudioBriefs() {
     </AdminLayout>
   );
 }
-// "use client";
-"use client";
