@@ -1,14 +1,10 @@
 import { NextRequest } from "next/server";
 import { Action } from "@/app/models/Studio";
-import {
-  mockActionResult,
-  ok,
-  badRequest,
-  readJson,
-} from "../../utils";
+import { mockActionResult, ok, badRequest, readJson } from "../../utils";
+import { StudioContext } from "@/app/models/Studio";
 
 interface VisualRequestBody {
-  context?: Record<string, unknown>;
+  context?: Partial<StudioContext>;
   references?: string[];
   style?: string;
   constraints?: string[];

@@ -40,12 +40,15 @@ export interface FinalPost extends SeoResult {
   categoryId?: string;
   categorySlug?: string;
   categoryTitle?: string;
+  briefId?: string;
+  origin?: string;
 }
 
 interface Props {
   initialValue?: FinalPost;
   btnTitle?: string;
   busy?: boolean;
+  briefId?: string;
   onSubmit(post: FinalPost): Promise<void>;
 }
 
@@ -53,6 +56,7 @@ export default function Editor({
   initialValue,
   btnTitle = "Submit",
   busy = false,
+  briefId,
   onSubmit,
 }: Props): JSX.Element {
   const [selectionRange, setSelectionRange] = useState<Range>();
@@ -79,7 +83,14 @@ export default function Editor({
 
   const captureSnapshot = () => {
     const currentContent = editor ? editor.getHTML() : post.content;
-    return { title: post.title, content: currentContent };
+    return {
+      title: post.title,
+      content: currentContent,
+      meta: post.meta,
+      tags: post.tags,
+      tagsArray: (post as any).tagsArray,
+      slug: post.slug,
+    };
   };
 
   const applyAction = (action: Action) => {
@@ -164,6 +175,13 @@ export default function Editor({
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
+  // briefId vindo do Studio, se houver
+  useEffect(() => {
+    if (briefId) {
+      setPost((prev) => ({ ...prev, briefId, origin: prev.origin || "studio" }));
+    }
+  }, [briefId]);
 
   // 1) Memoizando TODAS as opções do useEditor:
   const editorConfig = useMemo(() => {
@@ -597,6 +615,12 @@ export default function Editor({
                   setPost((prev) => ({
                     ...prev,
                     title: previousSnapshot.title,
+                    meta: (previousSnapshot as any).meta || prev.meta,
+                    tags: (previousSnapshot as any).tags || prev.tags,
+                    slug: (previousSnapshot as any).slug || prev.slug,
+                    ...(previousSnapshot as any).tagsArray
+                      ? { tagsArray: (previousSnapshot as any).tagsArray }
+                      : {},
                   }));
                   editor.commands.setContent(previousSnapshot.content);
                 }

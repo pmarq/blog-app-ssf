@@ -11,6 +11,7 @@ const links = [
   { href: "/dashboard/studio/pipeline", label: "Pipeline" },
   { href: "/dashboard/studio/metrics", label: "Métricas" },
   { href: "/dashboard/studio/settings/guardrails", label: "Guardrails" },
+  { href: "/dashboard/studio/jobs", label: "Jobs" },
 ];
 
 export default function StudioNav() {

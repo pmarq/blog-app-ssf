@@ -1,14 +1,10 @@
 import { NextRequest } from "next/server";
 import { Action, GuardrailIssue } from "@/app/models/Studio";
-import {
-  mockActionResult,
-  ok,
-  badRequest,
-  readJson,
-} from "../../utils";
+import { mockActionResult, ok, badRequest, readJson } from "../../utils";
+import { StudioContext } from "@/app/models/Studio";
 
 interface GuardrailRequestBody {
-  context?: Record<string, unknown>;
+  context?: Partial<StudioContext>;
   html?: string;
   assets?: string[];
   palette?: string[];
