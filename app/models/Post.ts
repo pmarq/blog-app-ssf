@@ -37,6 +37,13 @@ export interface Post {
     path: string;
     url: string;
   }>;
+  status?: string;
+  channel?: string;
+  briefId?: string;
+  assetSetId?: string;
+  scheduledAt?: FirebaseFirestore.Timestamp | null;
+  orgId?: string;
+  distribution?: Record<string, unknown>;
   author: DocumentReference;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
@@ -53,4 +60,11 @@ export interface PostResponse {
   thumbnail: Thumbnail | null; // Atualizado para usar a interface Thumbnail
   slug: string;
   meta: string;
+  status?: string;
+  channel?: string;
+  briefId?: string;
+  assetSetId?: string;
+  scheduledAt?: string;
+  orgId?: string;
+  distribution?: Record<string, unknown>;
 }

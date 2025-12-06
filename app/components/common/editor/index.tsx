@@ -22,6 +22,8 @@ import ToolBar from "./ToolBar";
 import SEOForm, { SeoResult } from "./SeoForm";
 import ThumbnailSelector from "./ThumbnailSelector";
 import ActionButton from "../ActionButton";
+import { useStudioActionsMock } from "@/app/hooks/useStudioActionsMock";
+import { Action, GuardrailIssue } from "@/app/models/Studio";
 import { useAuth } from "@/context/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -58,6 +60,99 @@ export default function Editor({
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState<Array<{ src: string }>>([]);
   const [seoInitialValue, setSeoInitialValue] = useState<SeoResult>();
+  const [showStudioStub, setShowStudioStub] = useState(false);
+  const [mockActions, setMockActions] = useState<string[]>([]);
+  const [mockBusy, setMockBusy] = useState(false);
+  const [previousSnapshot, setPreviousSnapshot] = useState<{
+    title: string;
+    content: string;
+  } | null>(null);
+  const [guardrailBusy, setGuardrailBusy] = useState(false);
+  const {
+    fetchIdeas,
+    fetchGuardrails,
+    loading: studioLoading,
+    lastRun,
+    markApplied,
+    issues,
+  } = useStudioActionsMock();
+
+  const captureSnapshot = () => {
+    const currentContent = editor ? editor.getHTML() : post.content;
+    return { title: post.title, content: currentContent };
+  };
+
+  const applyAction = (action: Action) => {
+    // salva snapshot antes de aplicar
+    setPreviousSnapshot(captureSnapshot());
+
+    switch (action.type) {
+      case "insert_title": {
+        const nextTitle = action.value ? String(action.value) : "";
+        setPost((prev) => ({ ...prev, title: nextTitle }));
+        break;
+      }
+      case "insert_outline": {
+        if (!editor) {
+          toast({
+            title: "Mock Studio",
+            description: "Editor não disponível para aplicar outline.",
+            variant: "destructive",
+          });
+          return;
+        }
+        const items = Array.isArray(action.items)
+          ? action.items.map((i) => String(i))
+          : action.value
+          ? [String(action.value)]
+          : [];
+        const html = `<ul>${items.map((o) => `<li>${o}</li>`).join("")}</ul>`;
+        editor.chain().focus().insertContent(html).run();
+        break;
+      }
+      case "insert_seo": {
+        const tags =
+          Array.isArray(action.tags) && action.tags.length
+            ? action.tags
+            : typeof action.tags === "string"
+            ? action.tags.split(",").map((t) => t.trim())
+            : post.tagsArray || post.tags;
+        setPost((prev) => ({
+          ...prev,
+          meta: action.meta || prev.meta,
+          tagsArray: tags as any,
+          tags: Array.isArray(tags) ? tags.join(", ") : String(tags || ""),
+        }));
+        break;
+      }
+      case "insert_ctas": {
+        if (!editor) {
+          toast({
+            title: "Mock Studio",
+            description: "Editor não disponível para aplicar CTAs.",
+            variant: "destructive",
+          });
+          return;
+        }
+        const items = Array.isArray(action.items)
+          ? action.items.map((i) => String(i))
+          : action.value
+          ? [String(action.value)]
+          : [];
+        const html = `<ul>${items.map((o) => `<li>${o}</li>`).join("")}</ul>`;
+        editor.chain().focus().insertContent(html).run();
+        break;
+      }
+      default: {
+        toast({
+          title: "Mock Studio",
+          description: `Ação ${action.type} não tem aplicação automática neste mock.`,
+          variant: "default",
+        });
+        break;
+      }
+    }
+  };
   const [post, setPost] = useState<FinalPost>({
     title: "",
     content: "",
@@ -258,7 +353,7 @@ export default function Editor({
 
         // Mapeia UploadResponse para Thumbnail
         finalThumbnail = {
-          url: uploadResponse.secure_url,
+          url: `${uploadResponse.secure_url}?f_auto,q_auto`,
           public_id: uploadResponse.public_id,
         };
 
@@ -379,12 +474,19 @@ export default function Editor({
               })()}
               onChange={updateThumbnail}
             />
-            <div className="inline-block">
+            <div className="inline-flex items-center gap-2">
               <ActionButton
                 busy={busy || uploading}
                 title={btnTitle}
                 onClick={handleSubmit}
               />
+              <button
+                type="button"
+                className="text-xs px-3 py-2 border rounded border-secondary-dark dark:border-secondary-light text-secondary-dark dark:text-secondary-light hover:bg-secondary-light/40 dark:hover:bg-secondary-dark/40 transition"
+                onClick={() => setShowStudioStub((prev) => !prev)}
+              >
+                Studio (mock)
+              </button>
             </div>
           </div>
           {/*Categorias*/}
@@ -426,6 +528,166 @@ export default function Editor({
           <ToolBar editor={editor} onOpenImageClick={handleOpenGallery} />
 
           <div className="h-[1px] w-full bg-secondary-dark dark:bg-secondary-light my-3" />
+        </div>
+
+        <div
+          className={`${
+            showStudioStub ? "block" : "hidden"
+          } mb-3 rounded border border-secondary-dark/50 dark:border-secondary-light/40 bg-secondary-light/20 dark:bg-secondary-dark/30 p-3 text-sm text-secondary-dark dark:text-secondary-light`}
+        >
+          <p className="font-semibold mb-1">
+            Studio (mock) ativo — apenas para testar fluxo.
+          </p>
+          <p className="mb-2">
+            Endpoints mockados: /api/studio/ai/ideas, /ai/visual, /curate/pdf,
+            /guardrails/check, /instagram/job, /publish/blog. Nada é enviado
+            para produção.
+          </p>
+          <p className="text-xs opacity-80">
+            Use o botão apenas como lembrete visual; integrações reais virão
+            depois.
+          </p>
+
+              <div className="mt-3 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setMockBusy(true);
+                    setMockActions([]);
+                    try {
+                      const data = await fetchIdeas();
+                      if (!data || !Array.isArray(data.actions)) {
+                        throw new Error("Resposta inválida do mock.");
+                      }
+                      const titles = data.actions
+                        .filter((a) => a.type === "insert_title" && a.value)
+                        .map((a) => String(a.value));
+                      const outlines = data.actions
+                        .filter((a) => a.type === "insert_outline" && a.items)
+                        .flatMap((a) => a.items as string[])
+                        .map((i) => String(i));
+                      setMockActions([
+                        ...titles.map((t: string) => `Título: ${t}`),
+                        ...outlines.map((o: string) => `Outline: ${o}`),
+                      ]);
+                      // não aplica automaticamente; use os botões de aplicar abaixo
+                    } catch (error) {
+                      console.error("Mock Studio error:", error);
+                      toast({
+                        title: "Mock Studio",
+                        description: "Falha ao chamar o mock /api/studio/ai/ideas.",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setMockBusy(false);
+                    }
+                  }}
+                  className="text-xs px-3 py-2 border rounded border-secondary-dark dark:border-secondary-light text-secondary-dark dark:text-secondary-light hover:bg-secondary-light/40 dark:hover:bg-secondary-dark/40 transition disabled:opacity-60"
+                  disabled={mockBusy || studioLoading}
+                >
+                  {mockBusy || studioLoading
+                    ? "Carregando..."
+                    : "Gerar ideias (mock)"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (previousSnapshot && editor) {
+                  setPost((prev) => ({
+                    ...prev,
+                    title: previousSnapshot.title,
+                  }));
+                  editor.commands.setContent(previousSnapshot.content);
+                }
+                setMockActions([]);
+                setPreviousSnapshot(null);
+              }}
+              className="text-xs px-3 py-2 border rounded border-secondary-dark/60 dark:border-secondary-light/60 text-secondary-dark dark:text-secondary-light hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
+            >
+              Desfazer mock
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                if (!editor) return;
+                setGuardrailBusy(true);
+                try {
+                  await fetchGuardrails(editor.getHTML());
+                } finally {
+                  setGuardrailBusy(false);
+                }
+              }}
+              className="text-xs px-3 py-2 border rounded border-secondary-dark dark:border-secondary-light text-secondary-dark dark:text-secondary-light hover:bg-secondary-light/40 dark:hover:bg-secondary-dark/40 transition disabled:opacity-60"
+              disabled={guardrailBusy || studioLoading || !editor}
+            >
+              {guardrailBusy ? "Checando..." : "Checar guardrails (mock)"}
+            </button>
+
+            {mockActions.length ? (
+              <div className="rounded bg-primary/40 dark:bg-primary-dark/40 p-2 text-xs space-y-1">
+                {mockActions.map((m, idx) => (
+                  <div key={idx}>• {m}</div>
+                ))}
+                {lastRun ? (
+                  <div className="pt-1 text-[10px] opacity-70">
+                    runId: {lastRun.runId} | schema: {lastRun.schemaVersion}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {issues.length ? (
+              <div className="rounded bg-secondary-light/30 dark:bg-secondary-dark/30 p-2 text-xs space-y-1">
+                <div className="font-semibold">Guardrails (mock)</div>
+                {issues.map((issue: GuardrailIssue) => (
+                  <div key={`${issue.field}-${issue.message}`} className="flex justify-between gap-2">
+                    <span>
+                      {issue.field}: {issue.message}
+                    </span>
+                    <span className="capitalize text-secondary-dark/80 dark:text-secondary-light/80">
+                      {issue.severity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {lastRun?.actions?.length ? (
+              <div className="rounded border border-secondary-dark/30 dark:border-secondary-light/30 p-2 text-xs space-y-1">
+                <div className="font-semibold">Ações disponíveis</div>
+                {lastRun.actions.map((action, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-2 border-t border-secondary-dark/10 dark:border-secondary-light/10 pt-1"
+                  >
+                    <div className="flex-1">
+                      <div className="capitalize">{action.type}</div>
+                      {action.value ? (
+                        <div className="text-[11px] opacity-80">{action.value}</div>
+                      ) : null}
+                      {action.meta ? (
+                        <div className="text-[11px] opacity-80">meta: {action.meta}</div>
+                      ) : null}
+                      {action.tags ? (
+                        <div className="text-[11px] opacity-80">
+                          tags: {Array.isArray(action.tags) ? action.tags.join(", ") : action.tags}
+                        </div>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      className="px-2 py-1 border rounded border-secondary-dark/40 dark:border-secondary-light/40 text-[11px] hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
+                      onClick={() => applyAction(action)}
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {/* Se existe editor, renderiza Link Editor */}

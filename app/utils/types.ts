@@ -24,6 +24,13 @@ export interface PostInput {
   categoryId?: string;
   thumbnail?: Thumbnail | File | { url: string; public_id?: string };
   authorId?: string;
+  status?: string;
+  channel?: string;
+  briefId?: string;
+  assetSetId?: string;
+  scheduledAt?: string;
+  orgId?: string;
+  distribution?: Record<string, unknown>;
 }
 
 export interface IncomingPost {

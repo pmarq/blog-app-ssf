@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     });
 
     const resources = result.resources.map((resource: any) => ({
-      src: resource.secure_url,
+      src: `${resource.secure_url}?f_auto,q_auto`, // serve WebP/AVIF e compressão automática
       public_id: resource.public_id,
       width: resource.width,
       height: resource.height,

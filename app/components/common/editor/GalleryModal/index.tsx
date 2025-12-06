@@ -66,7 +66,7 @@ const GalleryModal: FC<Props> = ({
       console.log("Imagem enviada com sucesso:", uploadResult);
 
       // Atualiza a galeria com a nova imagem
-      onFileSelect(uploadResult.secure_url);
+      onFileSelect(`${uploadResult.secure_url}?f_auto,q_auto`);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Erro ao subir arquivo:", error.message);
