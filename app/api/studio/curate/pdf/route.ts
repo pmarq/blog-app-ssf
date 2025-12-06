@@ -8,6 +8,29 @@ interface CuratePdfRequestBody {
 }
 
 export async function POST(request: NextRequest) {
+  // Suporta JSON (url/fileId) ou multipart/form-data com file
+  const contentType = request.headers.get("content-type") || "";
+  if (contentType.includes("multipart/form-data")) {
+    const form = await request.formData();
+    const file = form.get("file");
+    if (!file || !(file instanceof File)) {
+      return badRequest("Envie um PDF em 'file'.");
+    }
+    const fileName = file.name || "documento.pdf";
+
+    return ok({
+      schemaVersion: "1.0",
+      runId: makeRunId(),
+      extractedText: `Mock: texto extraído de ${fileName}.`,
+      sections: [
+        { heading: "Resumo", content: "Resumo executivo mock do PDF." },
+        { heading: "Destaques", content: "Pontos principais listados aqui." },
+      ],
+      sources: [fileName],
+      notes: "Mock: substitua por extração real na próxima fase.",
+    });
+  }
+
   const body = await readJson<CuratePdfRequestBody>(request);
   if (!body) return badRequest("Invalid JSON body.");
   if (!body.url && !body.fileId) {

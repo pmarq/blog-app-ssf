@@ -1,50 +1,232 @@
+"use client";
+
 import AdminLayout from "@/app/components/layout/AdminLayout";
 import StudioNav from "@/app/components/admin/StudioNav";
+import { useState } from "react";
+import { GuardrailIssue, Action, ActionResult } from "@/app/models/Studio";
+
+type ExtractResult = {
+  extractedText: string;
+  sections: { heading: string; content: string }[];
+  sources: string[];
+  notes?: string;
+  runId?: string;
+};
 
 export default function StudioCuradoria() {
-  const items = [
-    { id: "c1", type: "PDF", title: "Relatório mercado SP 2025", status: "extraído" },
-    { id: "c2", type: "Imagem", title: "Fachada contemporânea", status: "curado" },
-    { id: "c3", type: "PDF", title: "Dados FIPE-Zap", status: "pendente" },
-  ];
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<ExtractResult | null>(null);
+  const [guardrailBusy, setGuardrailBusy] = useState(false);
+  const [issues, setIssues] = useState<GuardrailIssue[]>([]);
+  const [visualBusy, setVisualBusy] = useState(false);
+  const [visualActions, setVisualActions] = useState<Action[]>([]);
+
+  const handleUpload = async () => {
+    if (!file) {
+      setError("Selecione um PDF primeiro.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/studio/curate/pdf", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Falha ao processar PDF (mock).");
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao processar PDF (mock).");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleGuardrails = async () => {
+    if (!result) return;
+    setGuardrailBusy(true);
+    setIssues([]);
+    try {
+      const res = await fetch("/api/studio/guardrails/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          html: result.extractedText,
+          context: { locale: "pt-BR" },
+        }),
+      });
+      if (!res.ok) throw new Error("Falha ao checar guardrails (mock).");
+      const data: ActionResult = await res.json();
+      setIssues(data.issues || []);
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao checar guardrails (mock).");
+    } finally {
+      setGuardrailBusy(false);
+    }
+  };
+
+  const handleVisual = async () => {
+    setVisualBusy(true);
+    setVisualActions([]);
+    try {
+      const res = await fetch("/api/studio/ai/visual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: { locale: "pt-BR", tone: "inlevor" },
+          references: [],
+          style: "inlevor",
+        }),
+      });
+      if (!res.ok) throw new Error("Falha ao gerar visual (mock).");
+      const data: ActionResult = await res.json();
+      setVisualActions(data.actions || []);
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao gerar visual (mock).");
+    } finally {
+      setVisualBusy(false);
+    }
+  };
 
   return (
     <AdminLayout>
-      <div className="max-w-4xl space-y-2">
+      <div className="max-w-4xl space-y-4">
         <StudioNav />
-        <h1 className="text-2xl font-semibold text-highlight-light dark:text-highlight-dark">
-          Curadoria
-        </h1>
-        <p className="text-secondary-dark dark:text-secondary-light">
-          Ingestão de PDFs/imagens, extração de texto e referências, prompts
-          Visia (mock).
-        </p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-highlight-light dark:text-highlight-dark">
+            Curadoria
+          </h1>
+          <p className="text-secondary-dark dark:text-secondary-light">
+            Ingestão de PDFs/imagens, extração de texto e referências, prompts
+            Visia (mock).
+          </p>
+        </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="rounded border border-secondary-dark/30 dark:border-secondary-light/30 p-3 text-sm bg-secondary-light/10 dark:bg-secondary-dark/30"
+        <div className="rounded border border-secondary-dark/30 dark:border-secondary-light/30 p-4 space-y-3 bg-secondary-light/10 dark:bg-secondary-dark/30">
+          <div className="flex flex-col gap-2 text-sm">
+            <label className="font-semibold text-secondary-dark dark:text-secondary-light">
+              Envie um PDF para extração (mock)
+            </label>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="text-secondary-dark dark:text-secondary-light text-sm"
+            />
+            <button
+              onClick={handleUpload}
+              disabled={busy}
+              className="w-fit text-xs px-3 py-2 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition disabled:opacity-60"
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-semibold">{item.type}</span>
-                <span className="text-xs text-secondary-dark/80 dark:text-secondary-light/80">
-                  {item.status}
-                </span>
+              {busy ? "Processando..." : "Processar PDF"}
+            </button>
+            {error && <p className="text-xs text-red-500">{error}</p>}
+          </div>
+
+          {result ? (
+            <div className="text-sm text-secondary-dark dark:text-secondary-light space-y-2">
+              <div className="font-semibold">Resultado mock</div>
+              {result.runId ? (
+                <div className="text-[11px] opacity-70">runId: {result.runId}</div>
+              ) : null}
+              <div>
+                <span className="font-semibold">Texto extraído:</span>{" "}
+                {result.extractedText}
               </div>
-              <p className="text-secondary-dark dark:text-secondary-light text-sm">
-                {item.title}
-              </p>
-              <div className="mt-2 flex gap-2 text-xs">
-                <button className="px-2 py-1 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition">
-                  Extrair texto
-                </button>
-                <button className="px-2 py-1 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition">
-                  Enviar ao Visia
-                </button>
+              <div className="space-y-1">
+                <div className="font-semibold">Seções:</div>
+                {result.sections?.map((s, idx) => (
+                  <div key={idx} className="pl-2">
+                    <div className="font-semibold">{s.heading}</div>
+                    <div className="text-xs">{s.content}</div>
+                  </div>
+                ))}
               </div>
+              <div>
+                <span className="font-semibold">Fontes:</span>{" "}
+                {result.sources?.join(", ")}
+              </div>
+              {result.notes ? (
+                <div className="text-xs opacity-80">Notas: {result.notes}</div>
+              ) : null}
             </div>
-          ))}
+          ) : null}
+
+          {result ? (
+            <div className="flex flex-col gap-2 text-sm">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleGuardrails}
+                  disabled={guardrailBusy}
+                  className="text-xs px-3 py-2 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition disabled:opacity-60"
+                >
+                  {guardrailBusy ? "Checando..." : "Checar guardrails (mock)"}
+                </button>
+                <button
+                  onClick={handleVisual}
+                  disabled={visualBusy}
+                  className="text-xs px-3 py-2 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition disabled:opacity-60"
+                >
+                  {visualBusy ? "Gerando..." : "Gerar visual (mock)"}
+                </button>
+              </div>
+
+              {issues.length ? (
+                <div className="rounded bg-secondary-light/30 dark:bg-secondary-dark/30 p-2 text-xs space-y-1">
+                  <div className="font-semibold">Issues de guardrail</div>
+                  {issues.map((issue) => (
+                    <div
+                      key={`${issue.field}-${issue.message}`}
+                      className="flex justify-between gap-2"
+                    >
+                      <span>
+                        {issue.field}: {issue.message}
+                      </span>
+                      <span className="capitalize text-secondary-dark/80 dark:text-secondary-light/80">
+                        {issue.severity}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {visualActions.length ? (
+                <div className="rounded border border-secondary-dark/30 dark:border-secondary-light/30 p-2 text-xs space-y-1">
+                  <div className="font-semibold">Prompts/ações visuais (mock)</div>
+                  {visualActions.map((act, idx) => (
+                    <div
+                      key={idx}
+                      className="border-t border-secondary-dark/10 dark:border-secondary-light/10 pt-1"
+                    >
+                      <div className="capitalize">{act.type}</div>
+                      {act.prompt ? (
+                        <div className="text-[11px] opacity-80">{act.prompt}</div>
+                      ) : null}
+                      {act.items ? (
+                        <div className="text-[11px] opacity-80">
+                          {Array.isArray(act.items)
+                            ? act.items.join(", ")
+                            : String(act.items)}
+                        </div>
+                      ) : null}
+                      {act.message ? (
+                        <div className="text-[11px] opacity-80">{act.message}</div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </AdminLayout>
