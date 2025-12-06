@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { Action } from "@/app/models/Studio";
-import { mockActionResult, ok, badRequest, readJson } from "../../utils";
+import {
+  mockActionResult,
+  ok,
+  badRequest,
+  readJson,
+  normalizeContext,
+} from "../../utils";
 import { StudioContext } from "@/app/models/Studio";
 
 interface VisualRequestBody {
@@ -39,7 +45,7 @@ export async function POST(request: NextRequest) {
     actions,
     guardrailScore: 0.85,
     notes: "Mock: retornando prompts/curadoria estáticos.",
-    context: body.context,
+    context: body.context ? normalizeContext(body.context) : undefined,
   });
 
   return ok(result);

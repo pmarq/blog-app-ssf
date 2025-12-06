@@ -36,9 +36,9 @@ export const readJson = async <T>(request: Request): Promise<T | null> => {
 };
 
 export const mockActionResult = (
-  overrides: Partial<ActionResult> & { context?: Partial<StudioContext> | Record<string, unknown> }
+  overrides: Partial<ActionResult> & { context?: Partial<StudioContext> }
 ): ActionResult => {
-  const context = normalizeContext(overrides.context as Partial<StudioContext>);
+  const context = normalizeContext(overrides.context);
   return {
     schemaVersion,
     runId: overrides.runId || makeRunId(),

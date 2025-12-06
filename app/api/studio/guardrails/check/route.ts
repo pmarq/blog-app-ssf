@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { Action, GuardrailIssue } from "@/app/models/Studio";
-import { mockActionResult, ok, badRequest, readJson } from "../../utils";
+import {
+  mockActionResult,
+  ok,
+  badRequest,
+  readJson,
+  normalizeContext,
+} from "../../utils";
 import { StudioContext } from "@/app/models/Studio";
 
 interface GuardrailRequestBody {
@@ -41,7 +47,7 @@ export async function POST(request: NextRequest) {
     issues,
     guardrailScore: 0.72,
     notes: "Mock: checagem de guardrails básica (não bloqueia).",
-    context: body.context,
+    context: body.context ? normalizeContext(body.context) : undefined,
   });
 
   return ok(result);

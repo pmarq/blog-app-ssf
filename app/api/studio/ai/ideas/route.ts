@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { Action } from "@/app/models/Studio";
-import { mockActionResult, ok, badRequest, readJson } from "../../utils";
+import { mockActionResult, ok, badRequest, readJson, normalizeContext } from "../../utils";
 import { StudioContext } from "@/app/models/Studio";
 
 interface IdeaRequestBody {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     actions,
     guardrailScore: 0.9,
     notes: "Mock: somente para validar o contrato frontend/backend.",
-    context: body.context,
+    context: body.context ? normalizeContext(body.context) : undefined,
   });
 
   return ok(result);
