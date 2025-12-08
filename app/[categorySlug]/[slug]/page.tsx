@@ -253,7 +253,7 @@ export default async function SinglePostPage({
         <SafeContent content={content} />
 
         {/* Comentários */}
-        <Comments belongsTo={`${categorySlug}/${slug}`} />
+        <Comments belongsTo={slug} />
       </section>
     </DefaultLayout>
   );
