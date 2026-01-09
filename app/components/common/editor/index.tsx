@@ -77,7 +77,6 @@ export default function Editor({
     fetchGuardrails,
     loading: studioLoading,
     lastRun,
-    markApplied,
     issues,
   } = useStudioActionsMock();
 

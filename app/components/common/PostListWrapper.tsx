@@ -18,23 +18,6 @@ interface PostsListWrapperProps {
   showControls?: boolean;
 }
 
-// Função para construir URLs absolutas
-const buildUrl = (path: string) => {
-  // Determina o domínio base (navegador ou servidor)
-  const baseUrl =
-    typeof window !== "undefined"
-      ? window.location.origin // No navegador
-      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; // No servidor
-
-  try {
-    // Cria a URL absoluta combinando o domínio base e o caminho
-    return new URL(path, baseUrl).toString();
-  } catch (error) {
-    console.error("Erro ao construir a URL:", { path, baseUrl, error });
-    throw new Error("Failed to build URL");
-  }
-};
-
 const PostsListWrapper: React.FC<PostsListWrapperProps> = ({
   initialPosts,
   initialLastVisibleId,

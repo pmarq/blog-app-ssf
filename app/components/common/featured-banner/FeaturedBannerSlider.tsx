@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -10,7 +10,7 @@ import Slider, { Settings } from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// Importe o seu botão customizado
+// Importe o seu botÇœo customizado
 // Ajuste o caminho se ele estiver em outro lugar
 import { Button } from "../../ui/button";
 
@@ -40,23 +40,31 @@ const settings: Settings = {
   slidesToScroll: 1,
   arrows: true,
   autoplay: true,
-  autoplaySpeed: 3000, // Opcional: tempo entre as transições
+  autoplaySpeed: 3000, // Opcional: tempo entre as transiÇõÇæes
 };
 
 export default function FeaturedProductsSlider({ banners }: Props) {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Se não houver banners, não renderiza nada
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  // Se nÇœo houver banners, nÇœo renderiza nada
   if (!banners.length) return null;
 
-  // Se houver apenas 1 banner, renderize sem Slider
-  if (banners.length === 1) {
-    const { banner, title, link, linkTitle } = banners[0];
+  const renderSingleBanner = (item: FeaturedBanner) => {
+    const { banner, title, link, linkTitle } = item;
     return (
       <div
         className="
           w-screen
-          h-[180px]         /* altura padrão no mobile */
+          h-[180px]         /* altura padrÇœo no mobile */
           sm:h-[220px]      /* a partir de 640px */
           md:h-[260px]      /* a partir de 768px */
           lg:h-[300px]      /* a partir de 1024px */
@@ -89,13 +97,13 @@ export default function FeaturedProductsSlider({ banners }: Props) {
         >
           <Image
             fill
-            src={banner.url} // <-- Use banner.url, que é de fato uma string
+            src={banner.url} // <-- Use banner.url, que Ç¸ de fato uma string
             alt={title}
             style={{ objectFit: "cover" }}
           />
         </div>
 
-        {/* Conteúdo sobreposto */}
+        {/* ConteÇ§do sobreposto */}
         <div className="absolute inset-0 px-10">
           <div className="w-1/2 h-full flex flex-col items-start justify-center">
             <h1 className="text-sm sm:text-xl md:text-2xl text-white font-semibold mb-2 leading-none sm:leading-tight md:leading-normal">
@@ -111,6 +119,11 @@ export default function FeaturedProductsSlider({ banners }: Props) {
         </div>
       </div>
     );
+  };
+
+  // Se houver apenas 1 banner, renderize sem Slider
+  if (banners.length === 1) {
+    return renderSingleBanner(banners[0]);
   }
 
   // Se houver dois ou mais banners, use o Slider normalmente
@@ -118,7 +131,7 @@ export default function FeaturedProductsSlider({ banners }: Props) {
     <div
       className="
         w-screen
-        h-[180px]         /* altura padrão no mobile */
+        h-[180px]         /* altura padrÇœo no mobile */
         sm:h-[220px]      /* a partir de 640px */
         md:h-[260px]      /* a partir de 768px */
         lg:h-[300px]      /* a partir de 1024px */
@@ -154,13 +167,13 @@ export default function FeaturedProductsSlider({ banners }: Props) {
             >
               <Image
                 fill
-                src={banner.url} // <-- Use banner.url, que é de fato uma string
+                src={banner.url} // <-- Use banner.url, que Ç¸ de fato uma string
                 alt={title}
                 style={{ objectFit: "cover" }}
               />
             </div>
 
-            {/* Conteúdo sobreposto */}
+            {/* ConteÇ§do sobreposto */}
             <div className="absolute inset-0 px-10">
               <div className="w-1/3 h-full p-0 md:p-12  flex flex-col items-start justify-center">
                 <h1 className="text-sm sm:text-xl md:text-3xl text-white font-semibold mb-4 leading-tight sm:leading-tight md:leading-normal">
