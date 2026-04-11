@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 
 import {
   createScheduleItem,
+  applySuggestions,
+  generateMonthIdeas,
   generateDraftJob,
   updateScheduleItem,
 } from "./actions";
@@ -15,6 +17,7 @@ import type {
   StudioChannel,
   StudioScheduleItemDTO,
   StudioStatus,
+  StudioSuggestion,
   StudioTheme,
 } from "@/lib/studio/types";
 
@@ -76,6 +79,11 @@ type NewItemFormState = {
 type SelectedDay = {
   dateKey: string;
   label: string;
+};
+
+type SuggestionItem = {
+  id: string;
+  suggestion: StudioSuggestion;
 };
 
 type AgendaClientProps = {
@@ -159,6 +167,24 @@ function sortBacklogItems(
   });
 }
 
+function buildSuggestionItems(list: StudioSuggestion[]): SuggestionItem[] {
+  return list.map((suggestion, index) => ({
+    id: `${index}-${suggestion.channel}-${suggestion.scheduledAt}`,
+    suggestion,
+  }));
+}
+
+function formatSuggestionTime(iso: string): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TIME_ZONE,
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(iso));
+}
+
 export default function AgendaClient({
   initialView,
   initialYm,
@@ -195,6 +221,15 @@ export default function AgendaClient({
   });
   const [selectedDay, setSelectedDay] = useState<SelectedDay | null>(null);
   const [isDayDrawerOpen, setIsDayDrawerOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<
+    Set<string>
+  >(new Set());
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [suggestionsStatus, setSuggestionsStatus] = useState<
+    "idle" | "loading" | "done" | "failed"
+  >("idle");
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -210,6 +245,7 @@ export default function AgendaClient({
   useEffect(() => {
     if (activeTab !== "month") {
       setIsDayDrawerOpen(false);
+      setSuggestionsOpen(false);
     }
   }, [activeTab]);
 
@@ -220,6 +256,11 @@ export default function AgendaClient({
   useEffect(() => {
     setIsDayDrawerOpen(false);
     setSelectedDay(null);
+    setSuggestionsOpen(false);
+    setSuggestions([]);
+    setSelectedSuggestionIds(new Set());
+    setSuggestionsStatus("idle");
+    setSuggestionsError(null);
   }, [selectedYm]);
 
   useEffect(() => {
@@ -479,6 +520,103 @@ export default function AgendaClient({
     handleUpdate(id, { status: "approved" });
   };
 
+  const handleGenerateMonthIdeas = () => {
+    setSuggestionsStatus("loading");
+    setSuggestionsError(null);
+
+    startTransition(() => {
+      void generateMonthIdeas({ ym: selectedYm }).then((result) => {
+        if (!result?.suggestions) {
+          setSuggestions([]);
+          setSelectedSuggestionIds(new Set());
+          setSuggestionsStatus("failed");
+          setSuggestionsError(result?.error || "Falha ao gerar pautas.");
+          setSuggestionsOpen(true);
+          toast({
+            title: "Erro",
+            description: result?.error || "Falha ao gerar pautas.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const items = buildSuggestionItems(result.suggestions);
+        setSuggestions(items);
+        setSelectedSuggestionIds(new Set(items.map((item) => item.id)));
+        setSuggestionsStatus(result.status);
+        setSuggestionsError(result.error || null);
+        setSuggestionsOpen(true);
+
+        if (result.status === "failed") {
+          toast({
+            title: "Fallback aplicado",
+            description:
+              result.error || "IA indisponivel, sugestoes geradas por fallback.",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Sugestoes prontas",
+            description: `jobId: ${result.jobId}`,
+            variant: "success",
+          });
+        }
+      });
+    });
+  };
+
+  const handleToggleSuggestion = (id: string) => {
+    setSelectedSuggestionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleApplySuggestions = () => {
+    const selected = suggestions
+      .filter((item) => selectedSuggestionIds.has(item.id))
+      .map((item) => item.suggestion);
+
+    if (!selected.length) {
+      toast({
+        title: "Selecione ao menos uma sugestao",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    startTransition(() => {
+      void applySuggestions({ suggestions: selected }).then((result) => {
+        if (!result?.items) {
+          toast({
+            title: "Erro",
+            description: result?.error || "Falha ao aplicar sugestoes.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        result.items.forEach(upsertItem);
+        setSuggestionsOpen(false);
+        setSuggestions([]);
+        setSelectedSuggestionIds(new Set());
+        setSuggestionsStatus("idle");
+        setSuggestionsError(null);
+
+        toast({
+          title: "Sugestoes aplicadas",
+          description: `${result.items.length} itens criados.`,
+          variant: "success",
+        });
+      });
+    });
+  };
+
   const selectedDayItems = selectedDay
     ? monthItemsByDay[selectedDay.dateKey] ?? []
     : [];
@@ -503,13 +641,27 @@ export default function AgendaClient({
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="text-xs px-3 py-2 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
-        >
-          Nova pauta
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {activeTab === "month" && (
+            <button
+              type="button"
+              onClick={handleGenerateMonthIdeas}
+              disabled={isPending || suggestionsStatus === "loading"}
+              className="text-xs px-3 py-2 border rounded border-highlight-light text-highlight-light dark:border-highlight-dark dark:text-highlight-dark hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
+            >
+              {suggestionsStatus === "loading"
+                ? "Gerando pautas..."
+                : "Gerar pautas do mes"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="text-xs px-3 py-2 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
+          >
+            Nova pauta
+          </button>
+        </div>
       </div>
 
       {activeTab === "month" && (
@@ -594,6 +746,18 @@ export default function AgendaClient({
         items={selectedDayItems}
         onClose={() => setIsDayDrawerOpen(false)}
         onCreateForDay={handleCreateForDay}
+      />
+
+      <SuggestionsDrawer
+        open={suggestionsOpen}
+        items={suggestions}
+        selectedIds={selectedSuggestionIds}
+        status={suggestionsStatus}
+        error={suggestionsError}
+        onClose={() => setSuggestionsOpen(false)}
+        onToggle={handleToggleSuggestion}
+        onApply={handleApplySuggestions}
+        onRetry={handleGenerateMonthIdeas}
       />
 
       {isModalOpen && (
@@ -884,6 +1048,140 @@ function ScheduleItemCard({
         >
           Aprovar
         </button>
+      </div>
+    </div>
+  );
+}
+
+type SuggestionsDrawerProps = {
+  open: boolean;
+  items: SuggestionItem[];
+  selectedIds: Set<string>;
+  status: "idle" | "loading" | "done" | "failed";
+  error: string | null;
+  onClose: () => void;
+  onToggle: (id: string) => void;
+  onApply: () => void;
+  onRetry: () => void;
+};
+
+function SuggestionsDrawer({
+  open,
+  items,
+  selectedIds,
+  status,
+  error,
+  onClose,
+  onToggle,
+  onApply,
+  onRetry,
+}: SuggestionsDrawerProps) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div
+        className="absolute right-0 top-0 h-full w-full max-w-lg bg-primary dark:bg-primary-dark border-l border-secondary-dark/30 dark:border-secondary-light/30 p-4 overflow-y-auto"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h3 className="text-lg font-semibold text-highlight-light dark:text-highlight-dark">
+              Sugestoes do mes
+            </h3>
+            <p className="text-xs text-secondary-dark/70 dark:text-secondary-light/70">
+              {items.length} sugestoes disponiveis
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xs px-2 py-1 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
+          >
+            Fechar
+          </button>
+        </div>
+
+        {status === "failed" && (
+          <div className="mt-4 rounded border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-600">
+            {error || "Falha ao gerar pautas com IA."}
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-xs text-secondary-dark/70 dark:text-secondary-light/70">
+            Selecione o que deseja aplicar
+          </span>
+          <button
+            type="button"
+            onClick={onRetry}
+            disabled={status === "loading"}
+            className="text-xs px-2 py-1 border rounded border-secondary-dark/40 dark:border-secondary-light/40 hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
+          >
+            Gerar novamente
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {items.length === 0 ? (
+            <div className="rounded border border-secondary-dark/30 dark:border-secondary-light/30 p-3 text-xs text-secondary-dark/70 dark:text-secondary-light/70">
+              Nenhuma sugestao disponivel.
+            </div>
+          ) : (
+            items.map((item) => (
+              <label
+                key={item.id}
+                className="block rounded border border-secondary-dark/30 dark:border-secondary-light/30 bg-secondary-light/10 dark:bg-secondary-dark/30 p-3"
+              >
+                <div className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(item.id)}
+                    onChange={() => onToggle(item.id)}
+                    className="mt-1 h-4 w-4"
+                  />
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-highlight-light dark:text-highlight-dark">
+                        {item.suggestion.title}
+                      </p>
+                      <span className="text-[10px] text-secondary-dark/70 dark:text-secondary-light/70">
+                        {formatSuggestionTime(item.suggestion.scheduledAt)}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-[10px] text-secondary-dark dark:text-secondary-light">
+                      <span className="rounded border border-secondary-dark/40 dark:border-secondary-light/40 px-2 py-0.5">
+                        {item.suggestion.channel}
+                      </span>
+                      <span className="rounded border border-secondary-dark/40 dark:border-secondary-light/40 px-2 py-0.5">
+                        {item.suggestion.theme}
+                      </span>
+                    </div>
+                    {item.suggestion.rationale && (
+                      <p className="text-xs text-secondary-dark/70 dark:text-secondary-light/70">
+                        {item.suggestion.rationale}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </label>
+            ))
+          )}
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onApply}
+            disabled={status === "loading"}
+            className="text-xs px-3 py-2 border rounded border-highlight-light text-highlight-light dark:border-highlight-dark dark:text-highlight-dark hover:bg-secondary-light/30 dark:hover:bg-secondary-dark/30 transition"
+          >
+            Aplicar selecionadas
+          </button>
+        </div>
       </div>
     </div>
   );

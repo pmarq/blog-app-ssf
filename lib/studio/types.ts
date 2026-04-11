@@ -60,14 +60,53 @@ export type StudioScheduleItemUpdate = Partial<
   >
 >;
 
-export type StudioJobType = "generate_draft";
-export type StudioJobStatus = "queued";
+export type StudioJobType = "generate_draft" | "generate_month_ideas";
+export type StudioJobStatus = "queued" | "processing" | "done" | "failed";
 
 export type StudioJob = {
   id: string;
   orgId: string;
-  scheduleItemId: string;
+  scheduleItemId?: string;
   type: StudioJobType;
   status: StudioJobStatus;
+  payload?: Record<string, unknown>;
+  result?: Record<string, unknown>;
+  error?: string | null;
   createdAt: Timestamp;
+  updatedAt?: Timestamp;
+};
+
+export type StudioPillarSetting = {
+  key: StudioTheme;
+  enabled: boolean;
+  weight?: number | null;
+};
+
+export type StudioCadence = Record<StudioChannel, number>;
+
+export type StudioEditorialSettings = {
+  id: string;
+  orgId: string;
+  pillars: StudioPillarSetting[];
+  cadence: StudioCadence;
+  tone: string;
+  guardrails: string[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+export type StudioEditorialSettingsDTO = Omit<
+  StudioEditorialSettings,
+  "createdAt" | "updatedAt"
+> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type StudioSuggestion = {
+  title: string;
+  theme: StudioTheme;
+  channel: StudioChannel;
+  scheduledAt: string;
+  rationale?: string;
 };
