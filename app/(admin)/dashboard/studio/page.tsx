@@ -9,48 +9,43 @@ export default function StudioLanding() {
         <StudioNav />
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-highlight-light dark:text-highlight-dark">
-            Studio
+            Criar
           </h1>
           <p className="text-secondary-dark dark:text-secondary-light">
-            Área do Content Ops Studio. Endpoints mock já disponíveis: ideias,
-            visual, curadoria, guardrails, jobs (blog/instagram).
+            Gere conteúdos (blog, Instagram, newsletter) e imagens a partir da
+            Biblioteca.
           </p>
           <p className="text-xs text-secondary-dark/80 dark:text-secondary-light/80">
-            Nada aqui publica ou altera posts ainda; é apenas a landing do
-            Studio.
+            Se a Biblioteca ainda estiver vazia, comece por Mercado (KB) para
+            subir PDFs e testar busca.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <StudioCard
-            title="Briefs"
-            description="Crie e gerencie briefs. Abra no editor ou gere post a partir do brief."
+            title="Conteúdos"
+            description="Crie peças e variações por canal. Use isso como “fila de produção” antes do calendário."
             href="/dashboard/studio/briefs"
           />
           <StudioCard
-            title="Curadoria"
-            description="Ingestão de PDFs/imagens, extração de texto e referências, prompts Visia."
-            href="/dashboard/studio/curadoria"
+            title="Biblioteca"
+            description="Suba materiais (PDFs, referências, templates) e valide a busca. Mercado e projetos ficam separados."
+            href="/dashboard/studio/library"
           />
           <StudioCard
-            title="Asset Sets"
-            description="Agrupe assets por formato (carousel/stories/ads/blog) e aplique guardrails."
-            href="/dashboard/studio/asset-sets"
+            title="Calendário"
+            description="Planeje cadência por canal e acompanhe status do que está pronto para publicar."
+            href="/dashboard/studio/agenda"
           />
           <StudioCard
-            title="Pipeline"
-            description="Kanban Brief → AssetSet → Post → Aprovação → Agendamento/Publicação."
-            href="/dashboard/studio/pipeline"
+            title="Regras & Voz"
+            description="Defina temas (pilares), tom e regras de conteúdo para manter consistência e evitar erros."
+            href="/dashboard/studio/settings/editorial"
           />
           <StudioCard
             title="Métricas"
             description="Insights de blog + Instagram com distribution logs."
             href="/dashboard/studio/metrics"
-          />
-          <StudioCard
-            title="Guardrails"
-            description="Regras de paleta/tipografia/ratio/CTA com severidade info/warn/block."
-            href="/dashboard/studio/settings/guardrails"
           />
         </div>
       </div>
