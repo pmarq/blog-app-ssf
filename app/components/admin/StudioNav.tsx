@@ -9,8 +9,10 @@ const links = [
   { href: "/dashboard/studio/briefs", label: "Briefs" },
   { href: "/dashboard/studio/curadoria", label: "Curadoria" },
   { href: "/dashboard/studio/asset-sets", label: "Asset Sets" },
+  { href: "/dashboard/studio/kb-market", label: "KB Mercado" },
   { href: "/dashboard/studio/pipeline", label: "Pipeline" },
   { href: "/dashboard/studio/metrics", label: "Métricas" },
+  { href: "/dashboard/studio/settings/editorial", label: "Editorial" },
   { href: "/dashboard/studio/settings/guardrails", label: "Guardrails" },
   { href: "/dashboard/studio/jobs", label: "Jobs" },
 ];
