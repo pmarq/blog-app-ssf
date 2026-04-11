@@ -2,6 +2,7 @@ import admin from "firebase-admin";
 import { getApps, ServiceAccount, App } from "firebase-admin/app";
 import { getAuth, Auth } from "firebase-admin/auth";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
+import { getStorage, Storage } from "firebase-admin/storage";
 
 // 1. Service Account do BLOG (Firestore)
 const serviceAccount = {
@@ -97,6 +98,7 @@ if (!apps.find((app) => app.name === "core")) {
 export const firestore: Firestore = getFirestore(blogApp);
 export const portalDb: Firestore = getFirestore(portalApp);
 export const auth: Auth = getAuth(coreApp);
+export const portalStorage: Storage = getStorage(portalApp);
 
 // Função utilitária (opcional)
 export const getTotalPages = async (
