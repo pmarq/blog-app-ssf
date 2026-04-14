@@ -1,6 +1,6 @@
 "use server";
 
-import { auth, firestore, portalDb } from "@/firebase/server";
+import { auth, firestore } from "@/firebase/server";
 import { sendVerificationEmail } from "@/lib/sendVerificationEmail";
 import { registerUserSchema } from "@/validation/registerUser";
 
@@ -37,7 +37,7 @@ export const registerUser = async (data: {
   let userRecord;
 
   try {
-    // 1. Cria o usuário no AUTH CENTRALIZADO
+    // 1. Cria o usuário no Auth
     userRecord = await auth.createUser({
       displayName: data.name,
       email: data.email,
@@ -47,21 +47,13 @@ export const registerUser = async (data: {
     // Define claims padrão
     await auth.setCustomUserClaims(userRecord.uid, { role: "user" });
 
-    // 2. Cria perfis nos dois Firestore em paralelo
-    await Promise.all([
-      firestore.collection("users").doc(userRecord.uid).set({
-        name: data.name,
-        email: data.email,
-        createdAt: new Date(),
-        role: "user",
-      }),
-      portalDb.collection("users").doc(userRecord.uid).set({
-        name: data.name,
-        email: data.email,
-        createdAt: new Date(),
-        role: "user",
-      }),
-    ]);
+    // 2. Cria perfil no Firestore do blog
+    await firestore.collection("users").doc(userRecord.uid).set({
+      name: data.name,
+      email: data.email,
+      createdAt: new Date(),
+      role: "user",
+    });
 
     // 3. Gera link de verificação de email
     const verificationLink = await auth.generateEmailVerificationLink(
@@ -83,7 +75,7 @@ export const registerUser = async (data: {
 
     return {
       error: false,
-      message: "User created successfully in both databases!",
+      message: "Usuário criado com sucesso!",
     };
   } catch (e: unknown) {
     // Acesso seguro às propriedades do erro (sem perder type safety)

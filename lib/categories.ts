@@ -10,6 +10,11 @@ export interface Category {
 }
 
 export async function getCategories(): Promise<Category[]> {
+  if (!db) {
+    throw new Error(
+      "Firebase client não configurado (env NEXT_PUBLIC_FIREBASE_* ausente)."
+    );
+  }
   const snapshot = await getDocs(collection(db, "categories"));
 
   return snapshot.docs.map((doc) => ({

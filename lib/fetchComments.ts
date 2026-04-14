@@ -46,6 +46,7 @@ export async function fetchLatestComments(limit: number): Promise<{
           id: postDoc.id,
           title: postData.title || "Untitled",
           slug: postData.slug || "",
+          categorySlug: postData.categorySlug || "",
         },
         createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : "",
         likes: data.likes || 0,

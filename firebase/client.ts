@@ -3,24 +3,31 @@ import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { coreConfig } from "../lib/firebase/coreConfig"; // Auth centralizado
-import { blogConfig } from "@/lib/firebase/blogConfig"; // Firestore do blog
+import { blogConfig } from "@/lib/firebase/blogConfig";
 
-let coreApp, blogApp;
+const APP_NAME = "ssf-blog";
+let app: ReturnType<typeof initializeApp> | null = null;
 
-// Auth centralizado
-if (!getApps().some((app) => app.name === "core")) {
-  coreApp = initializeApp(coreConfig, "core");
+const canInit =
+  !!blogConfig?.apiKey &&
+  !!blogConfig?.authDomain &&
+  !!blogConfig?.projectId &&
+  !!blogConfig?.appId;
+
+if (canInit) {
+  if (!getApps().some((a) => a.name === APP_NAME)) {
+    app = initializeApp(blogConfig, APP_NAME);
+  } else {
+    app = getApps().find((a) => a.name === APP_NAME)!;
+  }
 } else {
-  coreApp = getApps().find((app) => app.name === "core")!;
+  // Evita quebrar `next build` quando as env públicas são injetadas só no runtime.
+  // Em runtime, sem essas env, o Auth/Firestore realmente não funcionará.
+  console.warn(
+    "[firebase/client] NEXT_PUBLIC_FIREBASE_* ausentes. Firebase client não inicializado."
+  );
 }
-export const auth = getAuth(coreApp);
 
-// Firestore e Storage do blog
-if (!getApps().some((app) => app.name === "blog")) {
-  blogApp = initializeApp(blogConfig, "blog");
-} else {
-  blogApp = getApps().find((app) => app.name === "blog")!;
-}
-export const db = getFirestore(blogApp);
-export const storage = getStorage(blogApp); // Opcional, se for usar Storage do blog
+export const auth = app ? getAuth(app) : null;
+export const db = app ? getFirestore(app) : null;
+export const storage = app ? getStorage(app) : null;

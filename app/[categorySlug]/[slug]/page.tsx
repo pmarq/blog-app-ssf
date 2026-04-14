@@ -4,15 +4,14 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import dateFormat from "dateformat";
 import type { Metadata } from "next";
-import { getPostByCategoryAndSlug, getAllPostSlugs } from "@/lib/posts";
+import { getPostByCategoryAndSlug } from "@/lib/posts";
 import type { PostDetail } from "@/app/utils/types";
 import SafeContent from "@/app/components/common/SafeContent";
 import DefaultLayout from "@/app/components/layout/DefaultLayout";
 import Comments from "@/app/components/common/comments/Comments";
 import Script from "next/script";
 
-// ⏱ ISR: revalida a cada 60 s
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 /* ─────────────────────────────────────────────
  * Helpers
@@ -52,12 +51,6 @@ function estimateWordCount(html: string | undefined): number | undefined {
   return text.split(" ").length;
 }
 
-/* --- Rotas estáticas --------------------------------------------------------------- */
-export async function generateStaticParams() {
-  const snapshot = await getAllPostSlugs();
-  return snapshot.map(({ categorySlug, slug }) => ({ categorySlug, slug }));
-}
-
 /* --- Metadados dinâmicos (com canônico por post) ---------------------------------- */
 type RouteParams = Promise<{ slug: string; categorySlug: string }>;
 
@@ -77,7 +70,7 @@ export async function generateMetadata({
     };
   }
 
-  const ogImage = post.thumbnail?.url ?? "/og-default.png"; // fallback em /public
+  const ogImage = post.thumbnail?.url ?? "/blog-og.png"; // fallback em /public
   // IMPORTANTE: incluir /blog por causa do basePath
   const canonicalPath = `/blog/${categorySlug}/${slug}`;
 
@@ -140,7 +133,7 @@ export default async function SinglePostPage({
   const publishedISO = toDateSafe(createdAt).toISOString();
   const modifiedISO = toDateSafe(maybeUpdated).toISOString();
   const displayDate = dateFormat(toDateSafe(createdAt), "d-mmm-yyyy");
-  const ogImage = thumbnail?.url ?? "/og-default.png";
+  const ogImage = thumbnail?.url ?? "/blog-og.png";
   const wordCount = estimateWordCount(content);
   const canonicalPath = `/blog/${categorySlug}/${slug}`;
 
@@ -168,16 +161,16 @@ export default async function SinglePostPage({
             },
             author: {
               "@type": "Organization",
-              name: "Inlevor",
+              name: "Sabores Sem Fronteiras",
               url: "/blog",
             },
             publisher: {
               "@type": "Organization",
-              name: "Inlevor",
+              name: "Sabores Sem Fronteiras",
               url: "/blog",
               logo: {
                 "@type": "ImageObject",
-                url: "/logo.png",
+                url: "/logo.svg",
                 width: 120, // recomendável informar dimensões do logo
                 height: 60,
               },

@@ -2,7 +2,6 @@
 
 "use server";
 
-import { v4 as uuidv4 } from "uuid";
 import { Timestamp, DocumentReference } from "firebase-admin/firestore";
 import { Post } from "@/app/models/Post";
 import { postValidationSchema, validateSchema } from "@/lib/validationSchema";
@@ -80,7 +79,7 @@ export async function createPost(
     }
 
     // 4. Gerar ID do post
-    const postId = uuidv4();
+    const postId = crypto.randomUUID();
 
     // 5. Fazer upload da thumbnail para o Cloudinary e obter URL e public_id
     let thumbnailUrl = "";

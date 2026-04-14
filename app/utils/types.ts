@@ -80,6 +80,7 @@ export interface LatestComment {
     id: string;
     title: string;
     slug: string;
+    categorySlug?: string;
   };
   createdAt: string;
   likes: number;

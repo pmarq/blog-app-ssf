@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     },
     {
       field: "palette",
-      message: "Paleta fora do padrão preto/branco/cinza/areia/dourado.",
+      message: "Garanta contraste e legibilidade (especialmente em mobile).",
       severity: "warn",
     },
   ];

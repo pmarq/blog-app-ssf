@@ -12,7 +12,6 @@ import {
   ChevronsRight,
   LucideProps,
   Folder,
-  Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -40,7 +39,6 @@ export default function AdminNav() {
     { href: "/dashboard/categories", icon: Folder, label: "Categorias" },
     { href: "/dashboard/users", icon: Users, label: "Users" },
     { href: "/dashboard/comments", icon: Mail, label: "Comments" },
-    { href: "/dashboard/studio", icon: Sparkles, label: "Studio" },
   ];
 
   // Função que gerencia a expansão/recolhimento do menu

@@ -13,6 +13,9 @@ interface Props {
 
 const LatestCommentListCard: FC<Props> = ({ comment }): JSX.Element => {
   const { owner, belongsTo, content } = comment;
+  const postHref = belongsTo.categorySlug
+    ? `/${belongsTo.categorySlug}/${belongsTo.slug}`
+    : `/${belongsTo.slug}`;
   return (
     <div className="flex space-x-2">
       <ProfileIcon nameInitial={owner.name[0]} avatar={owner.avatar} />
@@ -24,7 +27,7 @@ const LatestCommentListCard: FC<Props> = ({ comment }): JSX.Element => {
         </p>
 
         <Link
-          href={"/" + belongsTo.slug}
+          href={postHref}
           target="_blank"
           rel="noreferrer noopener"
           className="text-secondary-dark hover:underline"

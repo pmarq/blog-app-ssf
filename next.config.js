@@ -1,4 +1,4 @@
-// next.config.js (BLOG inlevor)
+// next.config.js (BLOG - Sabores Sem Fronteiras)
 
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === "production";
@@ -28,14 +28,18 @@ const nextConfig = {
       bodySizeLimit: "10mb",
 
       // Domínios que o navegador mostra ao usuário
-      allowedOrigins: ["inlevor.com.br", "www.inlevor.com.br"],
+      allowedOrigins: [
+        "saboressemfronteiras.com.br",
+        "www.saboressemfronteiras.com.br",
+      ],
 
       // Hosts que chegam no cabeçalho `x-forwarded-host`
       // enviado pelo edge (Vercel). Use o curinga se
       // pretender mais subdomínios.
       allowedForwardedHosts: [
-        "blog-app-cloudinary-v3.vercel.app",
-        // '*.vercel.app'  // ← se mudar de pré-visualização constantemente
+        "saboressemfronteiras.com.br",
+        "www.saboressemfronteiras.com.br",
+        // "*.vercel.app"  // ← se usar previews do Vercel
       ],
     },
   },

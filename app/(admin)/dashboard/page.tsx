@@ -30,20 +30,20 @@ export default async function AdminDashboard() {
         {/* Seção de Posts e Comentários */}
         <div className="flex space-x-10">
           {/* Últimos Posts */}
-          <ContentWrapper seeAllRoute="/admin/posts" title="Últimos Posts">
-            {posts.map(({ id, title, meta, slug }) => (
+          <ContentWrapper seeAllRoute="/dashboard/posts" title="Últimos Posts">
+            {posts.map(({ id, title, meta }) => (
               <LatestPostListCard
                 key={id}
+                id={id}
                 title={title}
                 meta={meta}
-                slug={slug}
               />
             ))}
           </ContentWrapper>
 
           {/* Últimos Comentários */}
           <ContentWrapper
-            seeAllRoute="/admin/comments"
+            seeAllRoute="/dashboard/comments"
             title="Últimos Comentários"
           >
             {comments.map((comment) => (
@@ -54,7 +54,7 @@ export default async function AdminDashboard() {
 
         {/* Seção de Usuários */}
         <div className="max-w-full">
-          <ContentWrapper title="Últimos Usuários" seeAllRoute="/admin/users">
+          <ContentWrapper title="Últimos Usuários" seeAllRoute="/dashboard/users">
             {/*  <LatestUserTable users={users} /> */}
             <>Users</>
           </ContentWrapper>

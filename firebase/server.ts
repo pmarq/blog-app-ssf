@@ -1,119 +1,95 @@
 import admin from "firebase-admin";
-import { getApps, ServiceAccount, App } from "firebase-admin/app";
-import { getAuth, Auth } from "firebase-admin/auth";
-import { getFirestore, Firestore } from "firebase-admin/firestore";
-import { getStorage, Storage } from "firebase-admin/storage";
+import {
+  App,
+  ServiceAccount,
+  AppOptions,
+  cert,
+  getApps,
+  initializeApp,
+} from "firebase-admin/app";
+import { Auth, getAuth } from "firebase-admin/auth";
+import { Firestore, getFirestore } from "firebase-admin/firestore";
+import { Storage, getStorage } from "firebase-admin/storage";
 
-// 1. Service Account do BLOG (Firestore)
-const serviceAccount = {
-  type: "service_account",
-  project_id: "blog-app-tutorial-36121",
-  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-  private_key: process.env.FIREBASE_PRIVATE_KEY,
-  client_email: process.env.FIREBASE_CLIENT_EMAIL,
-  client_id: process.env.FIREBASE_CLIENT_ID,
-  auth_uri: "https://accounts.google.com/o/oauth2/auth",
-  token_uri: "https://oauth2.googleapis.com/token",
-  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-  client_x509_cert_url:
-    "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-shppm%40blog-app-tutorial-36121.iam.gserviceaccount.com",
-  universe_domain: "googleapis.com",
+/**
+ * Firebase Admin SDK (projeto único)
+ * - Reaproveita as mesmas ENV do app principal (Sabores Sem Fronteiras)
+ * - NÃO commitar JSON de service account
+ * - FIREBASE_PRIVATE_KEY pode vir com "\\n" (replace resolve)
+ */
+
+type EnvServiceAccount = {
+  projectId?: string;
+  clientEmail?: string;
+  privateKey?: string;
 };
 
-// 2. Service Account do PORTAL (Firestore do real-estate)
-const portalServiceAccount = {
-  type: "service_account",
-  project_id: "real-estate-app-4df1a",
-  private_key_id: process.env.PORTAL_FIREBASE_PRIVATE_KEY_ID,
-  private_key: process.env.PORTAL_FIREBASE_PRIVATE_KEY,
-  client_email: process.env.PORTAL_FIREBASE_CLIENT_EMAIL,
-  client_id: process.env.PORTAL_FIREBASE_CLIENT_ID,
-  auth_uri: "https://accounts.google.com/o/oauth2/auth",
-  token_uri: "https://oauth2.googleapis.com/token",
-  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-  client_x509_cert_url: process.env.PORTAL_FIREBASE_CLIENT_CERT_URL,
-  universe_domain: "googleapis.com",
+const envServiceAccount: EnvServiceAccount = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY
+    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+    : undefined,
 };
 
-// 3. Service Account do CORE (Auth centralizado)
-const coreServiceAccount = {
-  type: "service_account",
-  project_id: process.env.CORE_FIREBASE_PROJECT_ID,
-  private_key_id: process.env.CORE_FIREBASE_PRIVATE_KEY_ID,
-  private_key: process.env.CORE_FIREBASE_PRIVATE_KEY,
-  client_email: process.env.CORE_FIREBASE_CLIENT_EMAIL,
-  client_id: process.env.CORE_FIREBASE_CLIENT_ID,
-  auth_uri: "https://accounts.google.com/o/oauth2/auth",
-  token_uri: "https://oauth2.googleapis.com/token",
-  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-  client_x509_cert_url: process.env.CORE_FIREBASE_CLIENT_CERT_URL,
-  universe_domain: "googleapis.com",
-};
+const hasServiceAccount = (v: EnvServiceAccount): v is ServiceAccount =>
+  typeof v.projectId === "string" &&
+  v.projectId.length > 0 &&
+  typeof v.clientEmail === "string" &&
+  v.clientEmail.length > 0 &&
+  typeof v.privateKey === "string" &&
+  v.privateKey.length > 0;
 
-const apps = getApps();
+const ADMIN_APP_NAME = "ssf-blog";
 
-let blogApp: App;
-let portalApp: App;
-let coreApp: App;
+// Bucket real do projeto (sempre .appspot.com)
+const STORAGE_BUCKET: string | undefined =
+  process.env.FIREBASE_STORAGE_BUCKET ||
+  (process.env.FIREBASE_PROJECT_ID
+    ? `${process.env.FIREBASE_PROJECT_ID}.appspot.com`
+    : undefined);
 
-// Inicializa o app do Blog (Firestore do blog)
-if (!apps.find((app) => app.name === "blog")) {
-  blogApp = admin.initializeApp(
-    {
-      credential: admin.credential.cert(serviceAccount as ServiceAccount),
-      storageBucket: "blog-app-tutorial-36121.appspot.com",
-    },
-    "blog"
-  );
-} else {
-  blogApp = apps.find((app) => app.name === "blog")!;
+function assertEnvForProd(): void {
+  if (process.env.NODE_ENV !== "production") return;
+
+  const missing: string[] = [];
+  if (!envServiceAccount.projectId) missing.push("FIREBASE_PROJECT_ID");
+  if (!envServiceAccount.clientEmail) missing.push("FIREBASE_CLIENT_EMAIL");
+  if (!envServiceAccount.privateKey) missing.push("FIREBASE_PRIVATE_KEY");
+  if (!STORAGE_BUCKET) missing.push("FIREBASE_STORAGE_BUCKET");
+
+  // Não dar throw no import (isso quebra `next build` quando as ENV só existem no runtime).
+  // Em runtime, o SDK falha naturalmente se não houver credenciais (ou ADC).
+  if (missing.length) {
+    console.warn(
+      `[firebase/server] Variáveis ausentes em produção (build/runtime): ${missing.join(", ")}.`
+    );
+  }
 }
 
-// Inicializa o app do Portal (Firestore do portal/real-estate)
-if (!apps.find((app) => app.name === "portal")) {
-  portalApp = admin.initializeApp(
-    {
-      credential: admin.credential.cert(portalServiceAccount as ServiceAccount),
-      storageBucket: "real-estate-app-4df1a.appspot.com",
-    },
-    "portal"
-  );
-} else {
-  portalApp = apps.find((app) => app.name === "portal")!;
+function getOrInitAdminApp(): App {
+  assertEnvForProd();
+
+  const existing = getApps().find((a) => a.name === ADMIN_APP_NAME);
+  if (existing) return existing;
+
+  // Se PRIVATE_KEY não vier, o Admin SDK tenta GOOGLE_APPLICATION_CREDENTIALS (ADC).
+  const options: AppOptions = {};
+  if (hasServiceAccount(envServiceAccount)) {
+    options.credential = cert(envServiceAccount);
+  }
+  if (STORAGE_BUCKET) {
+    options.storageBucket = STORAGE_BUCKET;
+  }
+
+  return initializeApp(options, ADMIN_APP_NAME);
 }
 
-// Inicializa o app do Core (Auth centralizado)
-if (!apps.find((app) => app.name === "core")) {
-  coreApp = admin.initializeApp(
-    {
-      credential: admin.credential.cert(coreServiceAccount as ServiceAccount),
-    },
-    "core"
-  );
-} else {
-  coreApp = apps.find((app) => app.name === "core")!;
-}
+const adminApp = getOrInitAdminApp();
 
-// Exporte Firestore do blog e Auth centralizado (core)
-export const firestore: Firestore = getFirestore(blogApp);
-export const portalDb: Firestore = getFirestore(portalApp);
-export const auth: Auth = getAuth(coreApp);
-export const portalStorage: Storage = getStorage(portalApp);
-
-// Função utilitária (opcional)
-export const getTotalPages = async (
-  firestoreQuery: FirebaseFirestore.Query<
-    FirebaseFirestore.DocumentData,
-    FirebaseFirestore.DocumentData
-  >,
-  pageSize: number
-) => {
-  const queryCount = firestoreQuery.count();
-  const countSnapshot = await queryCount.get();
-  const countData = countSnapshot.data();
-  const total = countData.count;
-  const totalPages = Math.ceil(total / pageSize);
-  return totalPages;
-};
+export const auth: Auth = getAuth(adminApp);
+export const firestore: Firestore = getFirestore(adminApp);
+export const storageAdmin: Storage = getStorage(adminApp);
+export const storage: Storage = storageAdmin;
 
 export { admin };

@@ -556,9 +556,8 @@ export default function Editor({
             Studio (mock) ativo — apenas para testar fluxo.
           </p>
           <p className="mb-2">
-            Endpoints mockados: /api/studio/ai/ideas, /ai/visual, /curate/pdf,
-            /guardrails/check, /instagram/job, /publish/blog. Nada é enviado
-            para produção.
+            Endpoints mockados: /api/studio/ai/ideas, /api/studio/ai/visual e
+            /api/studio/guardrails/check. Nada é enviado para produção.
           </p>
           <p className="text-xs opacity-80">
             Use o botão apenas como lembrete visual; integrações reais virão

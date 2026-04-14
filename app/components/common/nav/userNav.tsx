@@ -5,13 +5,16 @@ import AuthButtons from "../auth-buttons";
 import NextImage from "next/image";
 
 export default function Navbar() {
+  const mainSiteUrl =
+    process.env.NEXT_PUBLIC_MAIN_SITE_URL ?? "https://saboressemfronteiras.com.br";
+
   return (
     <nav className="bg-slate-100 text-white px-5 h-24 flex items-center justify-between">
       {/* Logo (apenas logo como link para Home) */}
       <Link href="/">
         <NextImage
           src="/logo.svg"
-          alt="Logo"
+          alt="Sabores Sem Fronteiras"
           width={230}
           height={90}
           className="
@@ -27,43 +30,17 @@ export default function Navbar() {
             href="/"
             className="uppercase tracking-widest hover:underline text-sky-950"
           >
-            Home
-          </Link>
-        </li>
-        <li className="hidden sm:block md:text-xs text-[16px]">
-          <Link
-            href="https://inlevor.com.br/property-search"
-            className="uppercase tracking-widest hover:underline text-sky-950"
-          >
-            Buscar Imóveis
-          </Link>
-        </li>
-        <li className="hidden sm:block md:text-xs text-[16px]">
-          <Link
-            href="https://inlevor.com.br"
-            className="uppercase tracking-widest hover:underline text-sky-950"
-          >
-            Inlevor
+            Início
           </Link>
         </li>
         <li className="hidden sm:block md:text-xs text-[16px]">
           <a
-            href="https://inlevor.com.br/#sobre"
-            className="uppercase tracking-widest hover:underline text-sky-950"
-            target="_blank" // se quiser abrir em nova aba, senão pode tirar
-            rel="noopener noreferrer"
-          >
-            Sobre
-          </a>
-        </li>
-        <li className="hidden sm:block md:text-xs text-[16px]">
-          <a
-            href="https://inlevor.com.br/#contato"
+            href={mainSiteUrl}
             className="uppercase tracking-widest hover:underline text-sky-950"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Contato
+            Ir para o site
           </a>
         </li>
 

@@ -27,6 +27,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Listener para mudanças na autenticação
   useEffect(() => {
+    if (!auth) {
+      console.warn(
+        "[AuthProvider] Firebase Auth não inicializado (env NEXT_PUBLIC_FIREBASE_* ausente)."
+      );
+      return;
+    }
+
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user ?? null);
       if (user) {
@@ -59,6 +66,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Login com Google
   const loginWithGoogle = async () => {
+    if (!auth) {
+      throw new Error("Firebase Auth não configurado.");
+    }
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -81,6 +91,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Login com Email e Senha
   const loginWithEmail = async (email: string, password: string) => {
+    if (!auth) {
+      throw new Error("Firebase Auth não configurado.");
+    }
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -131,6 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Logout
   const logout = async () => {
     try {
+      if (!auth) return;
       await auth.signOut();
       setCurrentUser(null);
       setCustomClaims(null);

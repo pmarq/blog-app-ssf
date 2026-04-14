@@ -10,14 +10,14 @@ import UserNav from "./components/common/nav/userNav";
 
 /**
  * Domínio base para metadados absolutos
- * - Em produção, use NEXT_PUBLIC_BASE_URL = https://inlevor.com.br
+ * - Em produção, use NEXT_PUBLIC_BASE_URL = https://saboressemfronteiras.com.br
  * - Em previews (Vercel), usa VERCEL_URL
  */
 const SITE =
   process.env.NEXT_PUBLIC_BASE_URL ??
   (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : "https://inlevor.com.br");
+    : "https://saboressemfronteiras.com.br");
 
 /**
  * Como este projeto é o BLOG com basePath "/blog",
@@ -41,32 +41,30 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: "Inlevor – Imóveis de Alto Padrão",
-    template: "%s | Inlevor",
+    default: "Blog | Sabores Sem Fronteiras",
+    template: "%s | Sabores Sem Fronteiras",
   },
   description:
-    "Portal Inlevor: lançamentos e oportunidades no mercado imobiliário de alto padrão, com conteúdo, análises e curadoria especializada.",
-  applicationName: "Inlevor",
+    "Receitas, técnicas e cultura gastronômica para cozinhar melhor — conteúdo editorial do Sabores Sem Fronteiras.",
+  applicationName: "Sabores Sem Fronteiras",
   openGraph: {
     type: "website",
-    siteName: "Inlevor",
+    siteName: "Sabores Sem Fronteiras",
     // A URL pública da home DESTE app (blog)
     url: `${PUBLIC_BASE_PATH}`,
     locale: "pt_BR",
     images: [
       {
-        url: "/og-default.png", // certifique-se de existir em /public
+        url: "/blog-og.png",
         width: 1200,
         height: 630,
-        alt: "Inlevor",
+        alt: "Sabores Sem Fronteiras",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    site: "@inlevor",
-    creator: "@inlevor",
-    images: ["/og-default.png"],
+    images: ["/blog-og.png"],
   },
   robots: {
     index: true,

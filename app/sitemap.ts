@@ -13,9 +13,9 @@ function getOriginAndBasePath() {
     process.env.NEXT_PUBLIC_BASE_URL ??
     (process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : "https://inlevor.com.br");
+      : "https://saboressemfronteiras.com.br");
 
-  let origin = "https://inlevor.com.br";
+  let origin = "https://saboressemfronteiras.com.br";
   let baseFromUrl = "";
 
   try {
@@ -72,7 +72,7 @@ type PostLite = {
   indexable?: boolean;
 };
 
-export const revalidate = 1800; // literal
+export const dynamic = "force-dynamic";
 
 /* ── sitemap ─────────────────────────────── */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

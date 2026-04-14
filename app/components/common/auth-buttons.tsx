@@ -32,7 +32,7 @@ export default function AuthButtons() {
                   height={70}
                 />
               )}
-              <AvatarFallback className="text-slade-200">
+              <AvatarFallback className="text-slate-200">
                 {(auth.currentUser.displayName || auth.currentUser.email)?.[0]}
               </AvatarFallback>
             </Avatar>
@@ -46,16 +46,11 @@ export default function AuthButtons() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/account">My Account</Link>
+              <Link href="/account">Minha conta</Link>
             </DropdownMenuItem>
             {!!auth.customClaims?.admin && (
               <DropdownMenuItem asChild>
-                <Link href="/dashboard">Admin Dashboard</Link>
-              </DropdownMenuItem>
-            )}
-            {!auth.customClaims?.admin && (
-              <DropdownMenuItem asChild>
-                <Link href="/account/my-favourites">My Favourites</Link>
+                <Link href="/dashboard">Painel admin</Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
@@ -64,7 +59,7 @@ export default function AuthButtons() {
                 router.refresh();
               }}
             >
-              Logout
+              Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -75,14 +70,14 @@ export default function AuthButtons() {
             href="/login"
             className="uppercase tracking-widest hover:underline text-sky-950 text-xs font-poppins"
           >
-            Login
+            Entrar
           </Link>
           <div className="h-8 w-[1px] bg-white/50" />
           <Link
             href="/register"
             className="uppercase tracking-widest hover:underline text-sky-950 text-xs font-poppins"
           >
-            Signup
+            Criar conta
           </Link>
         </div>
       )}

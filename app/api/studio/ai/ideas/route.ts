@@ -17,24 +17,24 @@ export async function POST(request: NextRequest) {
   if (!body) return badRequest("Invalid JSON body.");
 
   const actions: Action[] = [
-    { type: "insert_title", value: "Título mock: mercado imobiliário 2025" },
+    { type: "insert_title", value: "Título mock: técnicas para saladas frescas" },
     {
       type: "insert_outline",
       items: [
-        "Contexto de mercado (dados atualizados e fontes)",
-        "Oportunidades por segmento",
-        "Riscos e mitigação",
-        "CTA final para leads qualificados",
+        "Quando faz sentido preparar com antecedência",
+        "Armazenamento e organização (sem inventar números)",
+        "Erros comuns e como evitar",
+        "Checklist final para servir",
       ],
     },
     {
       type: "insert_seo",
-      meta: "Panorama do mercado imobiliário em 2025 com fontes confiáveis.",
-      tags: ["imoveis", "mercado", "investimento"],
+      meta: "Guia prático para preparar e armazenar saladas com qualidade, mantendo textura e sabor.",
+      tags: ["saladas", "técnicas", "armazenamento", "mise-en-place"],
     },
     {
       type: "insert_ctas",
-      items: ["Fale com um especialista", "Baixe o guia completo"],
+      items: ["Ver mais posts do tema", "Compartilhar este artigo"],
     },
   ];
 

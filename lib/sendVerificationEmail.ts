@@ -4,10 +4,15 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationEmail(email: string, link: string) {
+  const brandName = "Sabores Sem Fronteiras";
+  const from =
+    process.env.RESEND_FROM ??
+    `${brandName} <noreply@saboressemfronteiras.com.br>`;
+
   return resend.emails.send({
-    from: "Inlevor <noreply@inlevor.com.br>",
+    from,
     to: [email],
-    subject: "Confirme seu e-mail na Inlevor",
+    subject: `Confirme seu e-mail no ${brandName}`,
     html: `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -52,9 +57,11 @@ export async function sendVerificationEmail(email: string, link: string) {
       <body>
         <div class="container">
           <div class="logo">
-            <img src="https://inlevor.com.br/logo.png" alt="Inlevor" width="110" />
+            <div style="font-weight:700;font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:#0f172a;">
+              ${brandName}
+            </div>
           </div>
-          <h2 style="text-align:center;margin-bottom:16px;">Bem-vindo à Inlevor!</h2>
+          <h2 style="text-align:center;margin-bottom:16px;">Bem-vindo(a)!</h2>
           <p>Para ativar sua conta, basta clicar no botão abaixo:</p>
           <div style="text-align:center;">
             <a href="${link}" class="btn" target="_blank" rel="noopener noreferrer">Verificar meu e-mail</a>
@@ -64,7 +71,7 @@ export async function sendVerificationEmail(email: string, link: string) {
             <b>Dica:</b> Após clicar no botão, finalize o processo clicando em "Continue" na página aberta.
           </p>
           <div class="footer">
-            &copy; ${new Date().getFullYear()} Inlevor
+            &copy; ${new Date().getFullYear()} ${brandName}
           </div>
         </div>
       </body>

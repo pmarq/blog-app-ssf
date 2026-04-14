@@ -8,12 +8,19 @@ import { useState } from "react";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
 
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
+        setMessage(null);
+        if (!auth) {
+          setMessage("Firebase não configurado. Verifique as variáveis de ambiente.");
+          return;
+        }
         await sendPasswordResetEmail(auth, email);
+        setMessage("Se existir uma conta com este e-mail, enviaremos o link de reset.");
       }}
       className="flex flex-col gap-4"
     >
@@ -25,6 +32,7 @@ export default function ForgotPasswordForm() {
       <Button className="w-full" type="submit">
         Reset Password
       </Button>
+      {message ? <div className="text-sm text-slate-600">{message}</div> : null}
     </form>
   );
 }

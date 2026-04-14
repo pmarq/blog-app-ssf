@@ -2,7 +2,6 @@
 
 "use server";
 
-import { v4 as uuidv4 } from "uuid";
 import { Timestamp } from "firebase-admin/firestore";
 
 import { firestore } from "@/firebase/server"; // Importação correta do Firestore
@@ -59,7 +58,7 @@ export async function createFeaturedBanner(
     }
 
     // 2. Gerar ID do banner
-    const bannerId = uuidv4();
+    const bannerId = crypto.randomUUID();
 
     // 3. Montar objeto
     const newBanner: Banner = {

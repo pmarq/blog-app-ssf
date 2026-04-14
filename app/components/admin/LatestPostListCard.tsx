@@ -5,15 +5,15 @@ import Link from "next/link";
 import { FC } from "react";
 
 interface Props {
+  id: string;
   title: string;
   meta: string;
-  slug: string;
   onDeleteClick?(): void;
 }
 
 const LatestPostListCard: FC<Props> = ({
+  id,
   title,
-  slug,
   meta,
   onDeleteClick,
 }): JSX.Element => {
@@ -25,7 +25,10 @@ const LatestPostListCard: FC<Props> = ({
       <p className="text-sm text-secondary-dark">{trimText(meta, 100)}</p>
 
       <div className="flex items-center justify-end space-x-3">
-        <Link href={`/admin/posts/update/${slug}`} className="text-primary-dark dark:text-primary transition hover:underline">
+        <Link
+          href={`/dashboard/posts/update/${id}`}
+          className="text-primary-dark dark:text-primary transition hover:underline"
+        >
           Edit
         </Link>
 

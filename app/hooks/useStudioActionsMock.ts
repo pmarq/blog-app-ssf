@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActionResult, Action, GuardrailIssue } from "@/app/models/Studio";
+import { withBasePath } from "@/lib/withBasePath";
 
 type AppliedAction = {
   action: Action;
@@ -17,11 +18,11 @@ export function useStudioActionsMock() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/studio/ai/ideas", {
+      const res = await fetch(withBasePath("/api/studio/ai/ideas"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          context: { locale: "pt-BR", tone: "inlevor" },
+          context: { locale: "pt-BR", tone: "ssf" },
         }),
       });
       if (!res.ok) throw new Error("Falha ao chamar /api/studio/ai/ideas");
@@ -47,7 +48,7 @@ export function useStudioActionsMock() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/studio/guardrails/check", {
+      const res = await fetch(withBasePath("/api/studio/guardrails/check"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -74,13 +75,13 @@ export function useStudioActionsMock() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/studio/ai/visual", {
+      const res = await fetch(withBasePath("/api/studio/ai/visual"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          context: { locale: "pt-BR", tone: "inlevor" },
+          context: { locale: "pt-BR", tone: "ssf" },
           references: [],
-          style: "inlevor",
+          style: "ssf",
         }),
       });
       if (!res.ok) throw new Error("Falha ao chamar /api/studio/ai/visual");

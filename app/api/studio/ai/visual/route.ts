@@ -24,14 +24,14 @@ export async function POST(request: NextRequest) {
     {
       type: "visual_prompt",
       prompt:
-        "Estilo INLEVOR: luz suave, arquitetura contemporânea, paleta preto/branco/areia/dourado discreto.",
+        "Estilo Sabores Sem Fronteiras: fotografia de comida com luz natural, fundo limpo, cores quentes e foco em textura.",
     },
     {
       type: "moodboard",
       items: [
-        "fachada_contemporanea.jpg",
-        "living_luz_suave.jpg",
-        "detalhe_dourado_sutil.jpg",
+        "salada_fresca_luz_natural.jpg",
+        "ingredientes_em_mise_en_place.jpg",
+        "close_textura_molho.jpg",
       ],
     },
     {

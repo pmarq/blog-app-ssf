@@ -1,5 +1,5 @@
 // app/page.tsx
-/* Página inicial do Blog Inlevor
+/* Página inicial do Blog (Sabores Sem Fronteiras)
    ──> Usa variáveis de ambiente com /blog sem duplicar
    ──> Metadata API + ISR + JSON-LD
 */
@@ -23,9 +23,9 @@ function getOriginAndBasePath() {
     process.env.NEXT_PUBLIC_BASE_URL ??
     (process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : "https://inlevor.com.br");
+      : "https://saboressemfronteiras.com.br");
 
-  let origin = "https://inlevor.com.br";
+  let origin = "https://saboressemfronteiras.com.br";
   let baseFromUrl = "";
 
   try {
@@ -34,7 +34,7 @@ function getOriginAndBasePath() {
     const p = stripTrailingSlash(u.pathname || "");
     baseFromUrl = p && p !== "/" ? p : "";
   } catch {
-    // se vier algo como "https://inlevor.com.br/blog", tenta separar
+    // se vier algo como "https://saboressemfronteiras.com.br/blog", tenta separar
     const noSlashEnd = stripTrailingSlash(raw);
     if (noSlashEnd.includes("://")) {
       const [, hostAndPath] = noSlashEnd.split("://");
@@ -62,24 +62,24 @@ function getOriginAndBasePath() {
   };
 }
 
-const { origin: ORIGIN, basePath: BASE_PATH } = getOriginAndBasePath(); // ex.: https://inlevor.com.br + /blog
-const ABS_BLOG = `${ORIGIN}${BASE_PATH}`; // ex.: https://inlevor.com.br/blog
+const { origin: ORIGIN, basePath: BASE_PATH } = getOriginAndBasePath(); // ex.: https://saboressemfronteiras.com.br + /blog
+const ABS_BLOG = `${ORIGIN}${BASE_PATH}`; // ex.: https://saboressemfronteiras.com.br/blog
 const OG_IMAGE = "/blog-og.png"; // deve existir em /public/blog-og.png
 
 /* ─────────────────────────────────────────────
  * Metadata (canônico/OG ABSOLUTOS p/ evitar /blog/blog)
  * ────────────────────────────────────────────*/
 export const metadata: Metadata = {
-  title: "Blog Inlevor | Mercado Imobiliário de Alto Padrão",
+  title: "Blog | Sabores Sem Fronteiras",
   description:
-    "Artigos, análises e tendências sobre o mercado imobiliário de alto padrão. Acompanhe e encontre oportunidades exclusivas.",
+    "Receitas, técnicas e cultura gastronômica — conteúdo editorial do Sabores Sem Fronteiras.",
   alternates: { canonical: ABS_BLOG },
   openGraph: {
-    title: "Blog Inlevor | Mercado de Alto Padrão",
+    title: "Blog | Sabores Sem Fronteiras",
     description:
-      "Insights sobre lançamentos, novidades e tendências sobre o mercado imobiliário de alto padrão.",
+      "Receitas, técnicas e cultura gastronômica — conteúdo editorial do Sabores Sem Fronteiras.",
     url: ABS_BLOG,
-    siteName: "Inlevor",
+    siteName: "Sabores Sem Fronteiras",
     type: "website",
     locale: "pt_BR",
     images: [
@@ -87,24 +87,24 @@ export const metadata: Metadata = {
         url: `${ORIGIN}${OG_IMAGE}`,
         width: 1200,
         height: 630,
-        alt: "Blog Inlevor",
+        alt: "Sabores Sem Fronteiras",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blog Inlevor | Mercado de Alto Padrão",
+    title: "Blog | Sabores Sem Fronteiras",
     description:
-      "Dados, tendências e oportunidades no mercado imobiliário de alto padrão – atualizado pela Inlevor.",
+      "Receitas, técnicas e cultura gastronômica — conteúdo editorial do Sabores Sem Fronteiras.",
     images: [`${ORIGIN}${OG_IMAGE}`],
   },
   robots: { index: true, follow: true },
 };
 
 /* ─────────────────────────────────────────────
- * ISR – revalida a cada 60 s
+ * Render dinâmico (evita depender de secrets no build)
  * ────────────────────────────────────────────*/
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 /* ─────────────────────────────────────────────
  * Página
@@ -131,7 +131,9 @@ export default async function BlogHomePage() {
     return (
       <DefaultLayout>
         <div className="max-w-4xl w-full mx-auto px-4 py-12">
-          <h1 className="text-2xl font-semibold mb-2">Blog Inlevor</h1>
+          <h1 className="text-2xl font-semibold mb-2">
+            Blog | Sabores Sem Fronteiras
+          </h1>
           <p className="text-slate-600">Nenhum post encontrado.</p>
         </div>
       </DefaultLayout>
@@ -150,16 +152,16 @@ export default async function BlogHomePage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Blog",
-            name: "Blog Inlevor",
+            name: "Blog | Sabores Sem Fronteiras",
             url: ABS_BLOG,
             description:
-              "Artigos e tendências sobre o mercado imobiliário de alto padrão.",
+              "Receitas, técnicas e cultura gastronômica — conteúdo editorial do Sabores Sem Fronteiras.",
             publisher: {
               "@type": "Organization",
-              name: "Inlevor",
+              name: "Sabores Sem Fronteiras",
               logo: {
                 "@type": "ImageObject",
-                url: `${ORIGIN}/logo.png`,
+                url: `${ORIGIN}/logo.svg`,
                 width: 120,
                 height: 60,
               },
@@ -174,7 +176,7 @@ export default async function BlogHomePage() {
       </div>
 
       <div className="mb-8 md:mb-14 text-2xl font-semibold text-sky-950 text-center">
-        Acompanhe o Mercado Imobiliário de Alto Padrão
+        Receitas, técnicas e cultura gastronômica
       </div>
 
       {/* Post em destaque */}

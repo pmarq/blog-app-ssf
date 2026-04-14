@@ -10,9 +10,9 @@ function getOriginAndBasePath() {
     process.env.NEXT_PUBLIC_BASE_URL ??
     (process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : "https://inlevor.com.br");
+      : "https://saboressemfronteiras.com.br");
 
-  let origin = "https://inlevor.com.br";
+  let origin = "https://saboressemfronteiras.com.br";
   let baseFromUrl = "";
 
   try {
@@ -38,10 +38,30 @@ function getOriginAndBasePath() {
 export default function robots(): MetadataRoute.Robots {
   const { origin, basePath } = getOriginAndBasePath();
   const sitemapUrl = `${origin}${basePath || ""}/sitemap.xml`; // ok com/sem /blog
+  const host = (() => {
+    try {
+      return new URL(origin).host;
+    } catch {
+      return "saboressemfronteiras.com.br";
+    }
+  })();
 
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/"] }],
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/api/",
+          "/dashboard",
+          "/account",
+          "/login",
+          "/register",
+          "/forgot-password",
+        ],
+      },
+    ],
     sitemap: sitemapUrl,
-    host: "inlevor.com.br",
+    host,
   };
 }
