@@ -1,0 +1,16 @@
+
+> blog-app-ssf@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.7
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 4.0min
+   Linting and checking validity of types ...
+   Collecting page data ...
+unhandledRejection [Error [PageNotFoundError]: Cannot find module for page: /_document] {
+  type: 'PageNotFoundError',
+  code: 'ENOENT'
+}

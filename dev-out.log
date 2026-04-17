@@ -1,0 +1,17 @@
+   ▲ Next.js 15.5.7 (Turbopack)
+   - Local:        http://localhost:3120
+   - Network:      http://192.168.0.13:3120
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+Creating turbopack project {
+  dir: 'C:\\Users\\usuario\\Desktop\\Programacao\\blog-app-ssf',
+  testMode: true
+}
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 4.1s
+ ✓ Ready in 38.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 129.5s
+ GET / 200 in 152703ms
