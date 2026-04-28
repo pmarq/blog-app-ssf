@@ -175,7 +175,7 @@ export default async function BlogHomePage() {
         <FeaturedProductsSlider banners={banners} />
       </div>
 
-      <div className="mb-8 md:mb-14 text-2xl font-semibold text-sky-950 text-center">
+      <div className="mb-8 md:mb-14 text-2xl font-semibold text-foreground text-center">
         Receitas, técnicas e cultura gastronômica
       </div>
 
@@ -184,7 +184,7 @@ export default async function BlogHomePage() {
 
       {/* Lista de artigos */}
       <div className="p-0 md:p-10">
-        <h2 className="text-xl text-sky-950 font-semibold mb-4">
+        <h2 className="text-xl text-primary font-semibold mb-4">
           Confira também...
         </h2>
         <PostsListWrapper

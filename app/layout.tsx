@@ -91,7 +91,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${poppins.className} antialiased bg-slate-100`}>
+      <body className={`${poppins.className} antialiased bg-background`}>
         <AuthProvider>
           <UserNav />
           {children}
