@@ -9,7 +9,7 @@ export default function Navbar() {
     process.env.NEXT_PUBLIC_MAIN_SITE_URL ?? "https://saboressemfronteiras.com.br";
 
   return (
-    <nav className="bg-slate-100 text-white px-5 h-24 flex items-center justify-between">
+    <nav className="bg-background border-b border-border px-5 h-20 flex items-center justify-between">
       {/* Logo (apenas logo como link para Home) */}
       <Link href="/">
         <NextImage
@@ -28,7 +28,7 @@ export default function Navbar() {
         <li className="hidden sm:block md:text-xs text-[16px]">
           <Link
             href="/"
-            className="uppercase tracking-widest hover:underline text-sky-950"
+            className="uppercase tracking-widest hover:underline text-primary hover:opacity-80 transition"
           >
             Início
           </Link>
@@ -36,7 +36,7 @@ export default function Navbar() {
         <li className="hidden sm:block md:text-xs text-[16px]">
           <a
             href={mainSiteUrl}
-            className="uppercase tracking-widest hover:underline text-sky-950"
+            className="uppercase tracking-widest hover:underline text-primary hover:opacity-80 transition"
             target="_blank"
             rel="noopener noreferrer"
           >

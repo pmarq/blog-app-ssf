@@ -47,7 +47,7 @@ const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
         <div className="p-4 mt-6 md:mt-0 flex flex-col justify-between md:w-3/4">
           <div>
             <div className="flex justify-between items-center mb-4">
-              <span className="text-xs md:text-base text-sky-800">
+              <span className="text-xs md:text-base text-primary">
                 {new Date(createdAt).toLocaleDateString("pt-BR", {
                   day: "2-digit",
                   month: "short",
@@ -58,20 +58,20 @@ const HighlightedPost: React.FC<HighlightedPostProps> = ({ post }) => {
                 {tags.map((tag, index) => (
                   <span
                     key={`${tag}-${index}`}
-                    className="text-xs md:text-base text-blue-500"
+                    className="text-xs md:text-base text-accent"
                   >
                     #{tag}
                   </span>
                 ))}
               </div>
             </div>
-            <h2 className="text-2xl font-semibold text-sky-950 mb-6">
+            <h2 className="text-2xl font-semibold text-foreground mb-6">
               {trimText(title, 60)}
             </h2>
-            <p className="text-base text-sky-900 mb-2">{trimText(meta, 200)}</p>
+            <p className="text-base text-muted-foreground mb-2">{trimText(meta, 200)}</p>
           </div>
           <div>
-            <span className="text-blue-600 dark:text-blue-500 hover:underline font-semibold">
+            <span className="text-primary hover:opacity-80 dark:text-primary hover:underline font-semibold transition">
               Ler Mais &rarr;
             </span>
           </div>
