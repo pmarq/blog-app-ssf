@@ -6,6 +6,8 @@ import { getStorage } from "firebase/storage";
 import { blogConfig } from "@/lib/firebase/blogConfig";
 
 const APP_NAME = "ssf-blog";
+const FIRESTORE_DATABASE_ID =
+  process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID ?? "(default)";
 let app: ReturnType<typeof initializeApp> | null = null;
 
 const canInit =
@@ -29,5 +31,5 @@ if (canInit) {
 }
 
 export const auth = app ? getAuth(app) : null;
-export const db = app ? getFirestore(app) : null;
+export const db = app ? getFirestore(app, FIRESTORE_DATABASE_ID) : null;
 export const storage = app ? getStorage(app) : null;

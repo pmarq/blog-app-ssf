@@ -83,8 +83,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/pmarq/blog-app-cloudinary-v3/issues"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pmarq/blog-app-ssf.git"
   },
-  "homepage": "https://github.com/pmarq/blog-app-cloudinary-v3#readme"
+  "bugs": {
+    "url": "https://github.com/pmarq/blog-app-ssf/issues"
+  },
+  "homepage": "https://github.com/pmarq/blog-app-ssf#readme"
 }

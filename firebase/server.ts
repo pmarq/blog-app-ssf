@@ -88,7 +88,8 @@ function getOrInitAdminApp(): App {
 const adminApp = getOrInitAdminApp();
 
 export const auth: Auth = getAuth(adminApp);
-export const firestore: Firestore = getFirestore(adminApp);
+const FIRESTORE_DATABASE_ID = process.env.FIREBASE_DATABASE_ID ?? "(default)";
+export const firestore: Firestore = getFirestore(adminApp, FIRESTORE_DATABASE_ID);
 export const storageAdmin: Storage = getStorage(adminApp);
 export const storage: Storage = storageAdmin;
 
