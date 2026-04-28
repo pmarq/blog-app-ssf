@@ -68,7 +68,7 @@ const PostCard: FC<Props> = ({
           <Badge variant="neutral" className="w-fit text-sm">
             {categoryTitle}
           </Badge>
-          <span className="text-sm text-sky-600">
+          <span className="text-sm text-primary">
             {formatDatePtBr(new Date(createdAt))}
           </span>
         </div>
@@ -78,7 +78,7 @@ const PostCard: FC<Props> = ({
           className="flex flex-col flex-1"
         >
           {/* Tags */}
-          <div className="flex items-center justify-between text-xs text-sky-950 mb-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
             <div className="flex flex-wrap items-center space-x-1">
               {tags.map((t, index) => (
                 <span key={`${t}-${index}`}>#{t}</span>
@@ -87,10 +87,10 @@ const PostCard: FC<Props> = ({
           </div>
 
           {/* Título e descrição */}
-          <h1 className="font-semibold text-sky-950 mb-1">
+          <h1 className="font-semibold text-foreground mb-1">
             {trimText(title, 50)}
           </h1>
-          <p className="text-sky-900 !text-[14px] mb-2">{trimText(meta, 70)}</p>
+          <p className="text-muted-foreground !text-[14px] mb-2">{trimText(meta, 70)}</p>
         </Link>
 
         {controls && (
