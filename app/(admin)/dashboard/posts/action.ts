@@ -9,6 +9,7 @@ import { firestore } from "@/firebase/server";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { v2 as cloudinary } from "cloudinary";
 import { PostInput } from "@/app/utils/types";
+import { notifyIngest } from "@/lib/ingest";
 
 // Configurar o Cloudinary no servidor
 cloudinary.config({
@@ -146,6 +147,20 @@ export async function createPost(
     await firestore.collection("posts").doc(postId).set(newPost);
 
     console.log("Post criado com sucesso:", postId);
+
+    // 8. Notificar serviço de ingestão (fire-and-forget)
+    notifyIngest({
+      id: postId,
+      title: postData.title,
+      content: postData.content,
+      slug: postData.slug,
+      meta: postData.meta || "",
+      tags: Array.isArray(postData.tags) ? postData.tags : [],
+      categorySlug,
+      categoryTitle,
+      thumbnail: thumbnailUrl || null,
+      source: "blog-app-ssf",
+    });
 
     return { postId };
   } catch (error) {
@@ -324,6 +339,20 @@ export async function updatePost(
 
     // 7. Atualizar no Firestore
     await postsRef.doc(postId).update(updateData);
+
+    // 8. Notificar serviço de ingestão (fire-and-forget)
+    notifyIngest({
+      id: postId,
+      title: postData.title,
+      content: postData.content,
+      slug: postData.slug,
+      meta: postData.meta || "",
+      tags: Array.isArray(postData.tags) ? postData.tags : [],
+      categorySlug: existingPost.categorySlug,
+      categoryTitle: existingPost.categoryTitle,
+      thumbnail: updateData.thumbnail?.url ?? existingPost.thumbnail?.url ?? null,
+      source: "blog-app-ssf",
+    });
 
     return { success: true };
   } catch (error) {
