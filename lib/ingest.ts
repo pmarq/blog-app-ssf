@@ -19,9 +19,9 @@ export interface IngestPayload {
  * Falhas são registradas em log mas não interrompem o fluxo principal.
  */
 export async function notifyIngest(payload: IngestPayload): Promise<void> {
-  const ingestUrl = process.env.INGEST_SERVICE_URL;
+  const ingestUrl = process.env.KNOWLEDGE_API_BASE_URL;
   if (!ingestUrl) {
-    console.warn("[ingest] INGEST_SERVICE_URL não configurada. Pulando ingestão.");
+    console.warn("[ingest] KNOWLEDGE_API_BASE_URL não configurada. Pulando ingestão.");
     return;
   }
 
